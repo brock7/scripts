@@ -1,5 +1,4 @@
-﻿#!/usr/bin/env python
-
+#!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
 #
@@ -18,7 +17,8 @@ import random
 from lxml import etree
 import time
 
-googleHome = 'http://www.google.com.hk/'
+#googleHome = 'http://www.google.com.hk/'
+googleHome = 'http://www.gfsoso.com/'
 reqTimeout = 30
 
 hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip', 
@@ -46,6 +46,7 @@ user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Fire
 	'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
 
 def url_filter(url, host):
+	#print host
 	if url.find(host) == -1:
 		return False
 	if url.find('http://translate.google') != -1:
@@ -69,7 +70,7 @@ def requestUrl(url):
 	response = urllib2.urlopen(request, data = None, timeout = reqTimeout)
 	return response
 
-def google(host, what):
+def Google(host, what):
 	global opener
 	print(('\n* google site:%s %s' % (host, what)).\
 		decode('utf-8').encode(sys.getfilesystemencoding()))
@@ -82,18 +83,55 @@ def google(host, what):
 	html = response.read()
 	#print html
 	tree = etree.HTML(html)
-	nodes = tree.xpath(r"//a/@href")
+	nodes = tree.xpath(r"/a//@href")
+	#print "node count: ", len(nodes), " html len: ", len(html)
+	#nodes = re.findall(r' href=["\'](.*?)["\']', html)
 	for node in nodes:
+		#print node
 		m = re.search('/url\?q=([^&]+)', node)
 		if m == None:
 			url = node
 		else:
 			url = m.group(1)
+		print node, host, url
 		if not url_filter(node, host):
 			continue
 		print url
 	return
-	
+
+def gf(host, what):
+	global opener
+	print(('\n* google site:%s %s' % (host, what)).\
+		decode('utf-8').encode(sys.getfilesystemencoding()))
+	what = urllib2.quote("site:%s %s" % (host, what))
+	url = googleHome + 'search?hl=en&num=100&q=%s' % what
+	#print url
+	#response = opener.open(url, data = None, timeout = 10)
+	response = requestUrl(url)
+	#print 'after'
+	html = response.read()
+	#print html
+	#tree = etree.HTML(html)
+	#nodes = tree.xpath(r"/a//@href")
+	nodes = re.findall(r' href=\\["\'](.*?)\\["\']', html)
+	#print "node count: ", len(nodes), " html len: ", len(html)
+	for node in nodes:
+		#print node
+		m = re.search('/url\?q=([^&]+)', node)
+		if m == None:
+			url = node
+		else:
+			url = m.group(1)
+		#print node, host, url
+		if not url_filter(url, host):
+			continue
+
+		url = url.replace('\\', '')
+		print url
+	return
+
+google = gf
+
 def refreshCookie():
 	global cookieJar
 	#global opener
@@ -110,7 +148,7 @@ def refreshCookie():
 	
 def googleHackLocal(host):
 	print('******* google hack: ' + host)
-	count = 1
+	count = 0
 	for hack in hacks:
 		if hack == '#':
 			#time.sleep(5)
@@ -135,10 +173,13 @@ def googleHackLocal(host):
 		count = count + 1
 
 def googleHackGhdb(host):
-	i = 3000
+	print '******* Hack exploit-db/GHDB'
+	i = 2
 	while True:
 		html = urllib2.urlopen('http://www.exploit-db.com/ghdb/%d/' % i).read()
-		res = re.search(r'Google search: <a href=\"http://www.google.com/search\?.*?q\=([^\"]+)', html)
+		# FIXME: sometime result is unavaliable
+		#print html
+		res = re.search(r'Google search: <a href=\"http://www.google.com/search\?.*?q\=([^"]+)', html)
 		if res == None:
 			#print str(html)
 			break
