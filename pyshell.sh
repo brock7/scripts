@@ -28,7 +28,9 @@ def invokeBash(cmdline):
 	#args = 'bash -c "source %s;%s #__INVOKE__;"' % (sys.argv[0], cmdline)
 	args = 'bash -c "source %s;%s;"' % (sys.argv[0], cmdline)
 	#print args
-	os.system(args)
+	pipe = os.popen(args);
+	#return os.system(args)
+	return pipe.read()
 
 ########## BEGIN PYTHON SCRIPT ##########
 # add your code here
@@ -39,5 +41,6 @@ import re
 #	print i
 invokeBash('func1')
 invokeBash('ls')
+print 'uname -a:\t', invokeBash('uname -a')
 ########## END PYTHON SCRIPT ##########
 
