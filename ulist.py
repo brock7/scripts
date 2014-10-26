@@ -51,7 +51,7 @@ req = urllib2.Request('http://www.newsmth.net/nForum/user/ajax_login.json')
 req.add_header('X-Requested-With', 'XMLHttpRequest')
 req.add_header('Referer', 'http://www.newsmth.net/')
 #req.add_header('Accept-Encoding', 'gzip, deflate')
-data = 'id=missmuse&passwd=820312&mode=0&CookieDate=0'
+data = 'id=missmuse&passwd=******&mode=0&CookieDate=0'
 response = opener.open(req, data)
 html = response.read().decode('gb2312')
 if not re.findall(r'"id":"MissMuse"', html) :
