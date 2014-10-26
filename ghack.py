@@ -127,6 +127,7 @@ def gf(host, what):
 			continue
 
 		url = url.replace('\\', '')
+		url = url.replace('&amp;', '&')
 		print url
 	return
 
