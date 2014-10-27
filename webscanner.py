@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys, os
 import urllib2
 import cookielib
@@ -5,7 +6,13 @@ import re
 import random
 from lxml import etree
 import time
+import getopt
+import errno
+import pdb
 
+config = './config'
+wait = 0.0
+checkAll = False
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -30,18 +37,21 @@ class WebScanner:
 	
 	results = [
 		"<b>Fatal error</b>:", 
-		"Access Denied"
+		"Access Denied",
+		"Fatal", 
+		"Error", 
 	];
 
 	def defaultHandler(self, request, respText):
-		#print html
+		if checkAll:
+			return True
 		for p in self.results:
-			if respText.find(p) >= 0:
+			if re.search(p , respText):
 				return True
 		return False
 
 	
-	def	sendReq(self, request, data, timeout = 15):
+	def sendReq(self, request, data, timeout = 15):
 		index = random.randint(0, len(user_agents) - 1)
 		user_agent = user_agents[index]
 		request.add_header('User-agent', user_agent)
@@ -66,15 +76,23 @@ class WebScanner:
 			#print respText
 			if self.defaultHandler(request, respText):
 				print url
-				print respText
-				print '-' * 60
+				print respText[:1024]
+				print '=' * 60
 
 	def scanHost(self, hostRoot, uris):
+		#pdb.set_trace()
 		for uri in uris:
+			if uri[0] != '/':
+				uri = '/' + uri
 			url = hostRoot + uri
 			self.scanUrl(url)
+			global wait
+			if wait > 0:
+				time.sleep(wait)
 	
 	def scan(self, hostRoot, uriFile, saveCookie = False):
+		#pdb.set_trace()
+		print '=' * 60
 		if saveCookie:
 			cookieJar = cookielib.CookieJar()
 			self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
@@ -82,10 +100,37 @@ class WebScanner:
 			self.opener = urllib2.build_opener()
 		file = open(uriFile)
 		if (file == None):
+			print file
 			return False
 		self.scanHost(hostRoot, file.readlines())
 		return True
 
+# webscanner.py [opt] host		 
+# -w wait time. 
+# -f config file. default ./config
+opts, args = getopt.getopt(sys.argv[1:], "af:w:")
+#print opts
+#print args
+for op, value in opts:
+	if op == '-a':
+		checkAll = True
+	elif op == "-f":
+		config = value
+	elif op == "-w":
+		wait = float(value)
+
+host = args[0]
+if config[-1] != '/':
+	config += '/'
+
+if not re.search(r'^http://', host):
+	host = 'http://' + host
+
 scanner = WebScanner()
-scanner.scan(sys.argv[1], sys.argv[2])
+
+ls = os.listdir(config)
+for path in ls:
+	if re.search('\.txt$', path):
+		print host, config + path
+		scanner.scan(host, config + path)
 
