@@ -35,12 +35,12 @@ class WebScanner:
 	def __init__(self, dictfile = ""):
 		self.dictfile = dictfile
 	
-	results = [
+	results = (
 		"<b>Fatal error</b>:", 
 		"Access Denied",
 		"Fatal", 
 		"Error", 
-	];
+	);
 
 	def defaultHandler(self, request, respText):
 		if checkAll:
