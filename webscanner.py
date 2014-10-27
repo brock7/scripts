@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 #
-# author: Brock | ÀÏÑı(laoyaogg@qq.com)
+# author: Brock | è€å¦–(laoyaogg@qq.com)
 #
 
 import sys, os
