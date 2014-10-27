@@ -109,8 +109,7 @@ class WebScanner:
 # -w wait time. 
 # -f config file. default ./config
 opts, args = getopt.getopt(sys.argv[1:], "af:w:")
-#print opts
-#print args
+
 for op, value in opts:
 	if op == '-a':
 		checkAll = True
