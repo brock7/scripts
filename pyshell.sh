@@ -39,8 +39,8 @@ import re
 #print 'Hello'
 #for i in range(1,5):
 #	print i
-invokeBash('func1')
-invokeBash('ls')
+print invokeBash('func1')
+print invokeBash('ls')
 print 'uname -a:\t', invokeBash('uname -a')
 ########## END PYTHON SCRIPT ##########
 

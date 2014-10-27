@@ -107,7 +107,11 @@ def gf(host, what):
 	url = googleHome + 'search?hl=en&num=100&q=%s' % what
 	#print url
 	#response = opener.open(url, data = None, timeout = 10)
-	response = requestUrl(url)
+	try:
+		response = requestUrl(url)
+	except:
+		print 'cannot open %s' % url
+		return
 	#print 'after'
 	html = response.read()
 	#print html
