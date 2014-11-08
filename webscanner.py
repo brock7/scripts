@@ -101,6 +101,8 @@ class WebScanner:
 					print req.get_full_url()
 					print respText[:1024]
 				print '=' * 60				
+			if wait > 0:
+				time.sleep(wait)
 
 		return True
 
