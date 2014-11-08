@@ -8,7 +8,7 @@ from lxml import etree
 import time
 import getopt
 import errno
-import pdb
+#import pdb
 
 config = './config'
 wait = 0.0
@@ -27,31 +27,53 @@ user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Fire
 	Chrome/28.0.1468.0 Safari/537.36', \
 	'Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0', 
 	'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
+	
+results = [
+	"<b>Fatal error</b>:", 
+	"Access Denied",
+	"Microsoft OLE DB Provider", 
+	"You have an error in your SQL syntax", 
+	r'ERROR [0-9]+?:', 
+];
+
+class ScanHandler: 
+
+	# return a generator or iterator
+	def requests(self):
+		return ()
+	
+	# return (result, response_text)
+	def filterResponse(self, request, response):
+		return True, ""
+
+class FileScanHandler(ScanHandler):
+	def __init__(self, host, fileName):
+		self._host = host
+		self._lines = open(fileName).readlines();
+		
+	def requests(self):
+		for uri in self._lines:
+			if uri[0] != '/':
+				uri = '/' + uri
+			yield urllib2.Request(self._host + uri)
+
+	def filterResponse(self, request, response):
+		respText = response.read()
+		if checkAll:
+			return True, respText
+		for p in results:
+			if re.search(p , respText):
+				return True, respText
+		return False, respText
 
 class WebScanner:
 
 	opener = None
 
-	def __init__(self, dictfile = ""):
-		self.dictfile = dictfile
+	def __init__(self):
+		pass
 	
-	results = [
-		"<b>Fatal error</b>:", 
-		"Access Denied",
-		"Fatal", 
-		"Error", 
-	];
-
-	def defaultHandler(self, request, respText):
-		if checkAll:
-			return True
-		for p in self.results:
-			if re.search(p , respText):
-				return True
-		return False
-
-	
-	def sendReq(self, request, data, timeout = 15):
+	def sendReq(self, request, data = None, timeout = 15):
 		index = random.randint(0, len(user_agents) - 1)
 		user_agent = user_agents[index]
 		request.add_header('User-agent', user_agent)
@@ -61,34 +83,6 @@ class WebScanner:
 			#print e
 			return None
 		return response
-
-	def scanUrl(self, url, data = None, hdrs = {}):
-		#print url
-		request = urllib2.Request(url)
-		#if data != None:
-		#	request.add_data(data)
-		for name, val in hdrs:
-			request.add_header(name, val)
-
-		response = self.sendReq(request, data)
-		if response:
-			respText = response.read()
-			#print respText
-			if self.defaultHandler(request, respText):
-				print url
-				print respText[:1024]
-				print '=' * 60
-
-	def scanHost(self, hostRoot, uris):
-		#pdb.set_trace()
-		for uri in uris:
-			if uri[0] != '/':
-				uri = '/' + uri
-			url = hostRoot + uri
-			self.scanUrl(url)
-			global wait
-			if wait > 0:
-				time.sleep(wait)
 	
 	def scan(self, hostRoot, uriFile, saveCookie = False):
 		#pdb.set_trace()
@@ -98,24 +92,41 @@ class WebScanner:
 			self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
 		else:
 			self.opener = urllib2.build_opener()
-		file = open(uriFile)
-		if (file == None):
-			print file
-			return False
-		self.scanHost(hostRoot, file.readlines())
+		scanHandler = FileScanHandler(hostRoot, uriFile)
+		for req in scanHandler.requests():
+			response = self.sendReq(req)
+			if response:
+				result, respText = scanHandler.filterResponse(req, response)
+				if result:
+					print req.get_full_url()
+					print respText[:1024]
+				print '=' * 60				
+
 		return True
 
-# webscanner.py [opt] host		 
-# -w wait time. 
-# -f config file. default ./config
-opts, args = getopt.getopt(sys.argv[1:], "af:w:")
+def usage():
+	helpMsg = sys.argv[0] + """ [opt] host			
+	
+	-a show all exist page
+	-e add custom error message
+	-f config file. default ./config
+	-h show help message
+	-w wait time."""	
+	print helpMsg 
+	sys.exit(0)
+	
+opts, args = getopt.getopt(sys.argv[1:], "ae:f:hw:")
 #print opts
 #print args
 for op, value in opts:
 	if op == '-a':
 		checkAll = True
+	elif op == "-e":
+		results.append(value)	
 	elif op == "-f":
 		config = value
+	elif op == "-h":
+		usage()
 	elif op == "-w":
 		wait = float(value)
 
@@ -133,4 +144,3 @@ for path in ls:
 	if re.search('\.txt$', path):
 		print host, config + path
 		scanner.scan(host, config + path)
-
