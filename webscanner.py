@@ -11,7 +11,6 @@ import errno
 #import pdb
 
 config = './config'
-wait = 0.0
 checkAll = False
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
@@ -37,7 +36,7 @@ results = [
 ];
 
 class ScanHandler: 
-
+		
 	# return a generator or iterator
 	def requests(self):
 		return ()
@@ -69,7 +68,8 @@ class FileScanHandler(ScanHandler):
 class WebScanner:
 
 	opener = None
-
+	wait = 0
+	
 	def __init__(self):
 		pass
 	
@@ -101,8 +101,8 @@ class WebScanner:
 					print req.get_full_url()
 					print respText[:1024]
 				print '=' * 60				
-			if wait > 0:
-				time.sleep(wait)
+			if self.wait > 0:
+				time.sleep(self.wait)
 
 		return True
 
@@ -116,11 +116,12 @@ def usage():
 	-w wait time."""	
 	print helpMsg 
 	sys.exit(0)
-	
+
+scanner = WebScanner()	
+
 opts, args = getopt.getopt(sys.argv[1:], "ae:f:hw:")
 #print opts
 #print args
-
 for op, value in opts:
 	if op == '-a':
 		checkAll = True
@@ -130,8 +131,8 @@ for op, value in opts:
 		config = value
 	elif op == "-h":
 		usage()
-	elif op == "-w":
-		wait = float(value)
+	elif op == "-w":		
+		scanner.wait = float(value)
 
 host = args[0]
 if config[-1] != '/':
@@ -139,8 +140,6 @@ if config[-1] != '/':
 
 if not re.search(r'^http://', host):
 	host = 'http://' + host
-
-scanner = WebScanner()
 
 ls = os.listdir(config)
 for path in ls:
