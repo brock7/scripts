@@ -118,6 +118,7 @@ def usage():
 opts, args = getopt.getopt(sys.argv[1:], "ae:f:hw:")
 #print opts
 #print args
+
 for op, value in opts:
 	if op == '-a':
 		checkAll = True
