@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+#
+# author: Brock | ÀÏÑý(laoyaogg@qq.com)
+#
+
 import sys, os
 import urllib2
 import cookielib
@@ -10,11 +15,15 @@ import getopt
 #import errno
 #import pdb
 import urlparse
+import types
+import locale
+#import socket
 
 config = './config'
 scanWait = 0
 scanType = 0 # 0 list, 1 crawler
 scanDepth = 3
+notFoundInfo = 'Not Found'
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -65,6 +74,7 @@ class Scanner:
 		print '=' * 60
 		print '[URL] ' + url
 		print '[MESSAGE] ' + msg
+		print '=' * 60
 		
 	def sendReq(self, request, data = None, timeout = 15):
 		index = random.randint(0, len(user_agents) - 1)
@@ -72,9 +82,18 @@ class Scanner:
 		request.add_header('User-agent', user_agent)
 		try:
 			response = self._opener.open(request, data = data, timeout = timeout)
+		except urllib2.HTTPError, e:
+			#print e, type(e), dir(e), e.code
+			if e.code != 404:
+				return e.msg
+			else:
+				return None
 		except Exception,e:
-			#print e
+			print e
 			return None
+		except:
+			return None
+			
 		return response
 	
 	def getUrls(self):
@@ -103,7 +122,7 @@ class Scanner:
 	
 class ListScanner(Scanner):
 	
-	def __init__(self, hostRoot, fileName, testers = (SimpleTester())):
+	def __init__(self, hostRoot, fileName, testers = (SimpleTester(), ) ):
 		self._hostRoot = hostRoot
 		self._fileName = fileName
 		self._testers = testers
@@ -120,9 +139,18 @@ class CrawlerScanner(Scanner):
 	
 	_reexp = re.compile(r"""<a[^>]*?href\s*=\s*['"]?([^'"\s>]{1,500})['">\s]""", 
 				re.I | re.M | re.S)
+				
+	_range = '.*'
 
 	def __init__(self, hostRoot, testers = [SimpleTester()]):
 		self._hostRoot = hostRoot
+		urlP = urlparse.urlparse(hostRoot)
+		
+		if urlP.hostname.count('.') > 1:
+			self._range = urlP.hostname[urlP.hostname.find('.') + 1:]
+		else:
+			self._range = urlP.hostname;
+		#print urlP.hostname, self._range
 		self._testers = testers
 
 	def adjustUrl(self, refer, url):
@@ -133,7 +161,6 @@ class CrawlerScanner(Scanner):
 		#print 'path:',urlP.path
 		#print 'query:', urlP.query
 		#print 'params', urlP.params
-		# print "SCAN:" + url
 		if urlP.hostname == None:
 			url = urlparse.urljoin(refer, url)
 		return url
@@ -141,7 +168,7 @@ class CrawlerScanner(Scanner):
 	def scanPage(self, url, depth):
 		depth += 1
 		if depth < scanDepth:
-			print url
+			#print url
 			req = urllib2.Request(url)
 			response = self.sendReq(req)
 			if response == None:
@@ -157,15 +184,18 @@ class CrawlerScanner(Scanner):
 					continue
 				link = self.adjustUrl(url, link)
 				if not link in self._linkList:
-					linkRec.add(link)
-					print link
-					yield link
+					if link.find(self._range) != -1:
+						linkRec.add(link)
+						print link
+						yield link
 			self._linkList.union(linkRec)
 			for link in linkRec:				
 				for link2 in self.scanPage(link, depth):
 					yield link2
 
 	def getUrls(self):
+		print self._hostRoot
+		yield self._hostRoot
 		for url in self.scanPage(self._hostRoot, 0):
 			yield url	
 
@@ -192,10 +222,80 @@ class SqlInjectionTester(Tester):
 	def scan(self, url, scaner):
 		pass
 
-# .git | .svn | .file.swp(vim) | file.bak | dir.rar
+# .git | .svn | .file.swp(vim) | file.bak | dir.rar(zip tar tar.gz tar.bz2 tgz tbz)
 class HiddenFileTester(Tester):
-	def scan(self, url, scaner):
-		pass
+	_pathRec = set()
+	
+	def scanUrl(self, url):
+		#print url
+		req = urllib2.Request(url)
+		response = scanner.sendReq(req)
+		if response == None:
+			return
+		# print type(response)
+		if type(response) == types.StringType:
+			respText = response
+		else:
+			respText = response.read()
+			
+		try:
+			respText = respText.decode('utf-8').encode(locale.getdefaultlocale()[1])			
+		except Exception, e:
+			pass
+		if respText.find(notFoundInfo) == -1:
+			scanner.report(url, respText[:512])
+	
+	_dirs = ('.svn/entries', '.git/config')
+	
+	def scanDir(self, path, scanner):
+		for dir in self._dirs:
+			url = path + dir
+			self.scanUrl(url)
+	
+	def scanFile(self, path, file, scanner):
+		urlP = urlparse.urlparse(file)
+		pathItems = os.path.split(urlP.path)
+		#print pathItems
+		path2 = path[:-1];
+		path3 = pathItems[0][pathItems[0].rfind('/') + 1 :]
+		#print "path3 = " + path3
+		#print path, path2, path3
+		files = [path + '.' + pathItems[1] + '.swp', 
+			path + pathItems[1] + '.bak', 			
+			file + '.zip', file + '.rar', file + '.tar.gz', 
+			file + '.tar.bz2', file + '.tgz', file + '.tbz', 
+			file + '.tar', file + '.7z']
+		if len(path3) > 0:
+			files.extend((path2 + '.zip', path2 + '.rar', path2 + '.tar.gz', 
+				path2 + '.tar.bz2', path2 + '.tgz', path2 + '.tbz', 
+				path2 + '.tar', path2 + '.7z', 
+				path + path3 + '.zip', path + path3 + '.rar', path + path3 + '.tar.gz', 
+				path + path3 + '.tar.bz2', path + path3 + '.tgz', path + path3 + '.tbz', 
+				path + path3 + '.tar', path + path3 + '.7z', ))
+
+		for url in files:
+			self.scanUrl(url)
+		
+	def scan(self, url, scanner):
+		#print '*** ' + url
+		urlP = urlparse.urlparse(url)
+		if urlP.path == '':
+			url += '/'
+		urlP = urlparse.urlparse(url)
+		# pathItems = urlP.path.split('/')
+		#pathItems = os.path.split(urlP.path)
+		if len(urlP.query) <= 0:
+			file = url
+		else:
+			file = url[:url.rfind('?')]
+		path = url[:url.rfind(r'/') + 1]
+		
+		if not path in self._pathRec:
+			self._pathRec.add(path)
+			self.scanDir(path, scanner)
+		#req = urllib2.Request(url)
+		if file != path:
+			self.scanFile(path, file, scanner)
 
 #####################################################################
 if __name__ == "__main__":
@@ -211,7 +311,7 @@ if __name__ == "__main__":
 		print helpMsg 
 		sys.exit(0)
 	
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hpw:")
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hn:pw:")
 	#print opts
 	#print args
 	for op, value in opts:
@@ -225,6 +325,8 @@ if __name__ == "__main__":
 			config = value
 		elif op == "-h":
 			usage()
+		elif op == '-n':
+			notFoundInfo = value
 		elif op == '-p':
 			scanType = 1
 		elif op == "-w":		
