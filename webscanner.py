@@ -4,15 +4,16 @@ import urllib2
 import cookielib
 import re
 import random
-from lxml import etree
+#from lxml import etree
 import time
 import getopt
-import errno
+#import errno
 #import pdb
 
 config = './config'
-wait = 0
+scanWait = 0
 scanType = 0 # 0 list, 1 crawler
+scanDepth = 3
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -81,7 +82,9 @@ class Scanner:
 	def scanUrl(self, url):
 		for tester in self._testers:
 			tester.scan(url, self)
-				
+			if scanWait > 0:
+				time.sleep(scanWait)
+					
 	def scan(self, saveCookie = False):
 		#pdb.set_trace()
 		# print '=' * 60
@@ -95,8 +98,6 @@ class Scanner:
 		
 		for url in urls:
 			self.scanUrl(url)
-			if wait > 0:
-				time.sleep(wait)
 		return True
 	
 class ListScanner(Scanner):
@@ -113,13 +114,49 @@ class ListScanner(Scanner):
 			yield self._hostRoot + uri
 
 class CrawlerScanner(Scanner):
+	
+	_linkList = set()
+	
+	_reexp = re.compile(r"""<a[^>]*?href\s*=\s*['"]?([^'"\s>]{1,500})['">\s]""", 
+				re.I | re.M | re.S)
+
 	def __init__(self, hostRoot, testers = [SimpleTester()]):
 		self._hostRoot = hostRoot
 		self._testers = testers
 
+	def adjustUrl(self, refer, url):
+		# FIXME: 
+		return url
+
+	def scanPage(self, url, depth):
+		depth += 1
+		if depth < scanDepth:
+			print url
+			req = urllib2.Request(url)
+			response = self.sendReq(req)
+			if response == None:
+				raise StopIteration()
+			html = response.read()
+			#tree = etree.HTML(html)
+			#links = tree.xpath(r"/a//@href")			
+			links = self._reexp.findall(html)
+			#print len(links), links
+			linkRec = set()
+			for link in links:
+				link = self.adjustUrl(url, link)
+				if not link in self._linkList:
+					linkRec.add(link)
+					print link
+					yield link
+			self._linkList.union(linkRec)
+			for link in linkRec:				
+				for link2 in self.scanPage(link, depth):
+					yield link2
+
 	def getUrls(self):
-		return ()
-		
+		for url in self.scanPage(self._hostRoot, 0):
+			yield url	
+
 if __name__ != "__main__":
 	sys.exit(0)
 	
@@ -134,12 +171,14 @@ def usage():
 	print helpMsg 
 	sys.exit(0)
 
-opts, args = getopt.getopt(sys.argv[1:], "ae:f:hpw:")
+opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hpw:")
 #print opts
 #print args
 for op, value in opts:
 	if op == '-a':
 		checkAll = True
+	elif op == '-d':
+		scanDepth = int(value)
 	elif op == "-e":
 		results.append(value)	
 	elif op == "-f":
@@ -149,7 +188,7 @@ for op, value in opts:
 	elif op == '-p':
 		scanType = 1
 	elif op == "-w":		
-		wait = float(value)
+		scanWait = float(value)
 
 urlRoot = args[0]
 
@@ -167,6 +206,5 @@ if scanType == 0:
 			scanner = ListScanner(urlRoot, config + path)
 			scanner.scan()
 elif scanType == 1:
-	scanner = CrawlerScanner(urlRoot)
+	scanner = CrawlerScanner(urlRoot, ())
 	scanner.scan()
-	
