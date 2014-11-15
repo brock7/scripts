@@ -192,7 +192,7 @@ class SqlInjectionTester(Tester):
 	def scan(self, url, scaner):
 		pass
 
-# .git | .svn | .file.swp(vim) | .bak
+# .git | .svn | .file.swp(vim) | file.bak | dir.rar
 class HiddenFileTester(Tester):
 	def scan(self, url, scaner):
 		pass
