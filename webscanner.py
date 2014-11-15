@@ -183,7 +183,7 @@ class CrawlerScanner(Scanner):
 				if re.search(r'^javascript:', link):
 					continue
 				link = self.adjustUrl(url, link)
-				if not link in self._linkList:
+				if not link in self._linkList and not link in linkRec:
 					if link.find(self._range) != -1:
 						linkRec.add(link)
 						print link
@@ -194,6 +194,7 @@ class CrawlerScanner(Scanner):
 					yield link2
 
 	def getUrls(self):
+		self._linkList.add(self._hostRoot)
 		print self._hostRoot
 		yield self._hostRoot
 		for url in self.scanPage(self._hostRoot, 0):
