@@ -9,6 +9,7 @@ import time
 import getopt
 #import errno
 #import pdb
+import urlparse
 
 config = './config'
 scanWait = 0
@@ -55,7 +56,7 @@ class SimpleTester(Tester):
 
 class Scanner:
 	_opener = None	
-	_testers = []
+	_testers = ()
 	
 	def __init__(self):
 		pass
@@ -102,7 +103,7 @@ class Scanner:
 	
 class ListScanner(Scanner):
 	
-	def __init__(self, hostRoot, fileName, testers = [SimpleTester()]):
+	def __init__(self, hostRoot, fileName, testers = (SimpleTester())):
 		self._hostRoot = hostRoot
 		self._fileName = fileName
 		self._testers = testers
@@ -125,7 +126,16 @@ class CrawlerScanner(Scanner):
 		self._testers = testers
 
 	def adjustUrl(self, refer, url):
-		# FIXME: 
+		urlP = urlparse.urlparse(url)
+		#print 'protocol:',urlP.scheme
+		#print 'hostname:',urlP.hostname
+		#print 'port:',urlP.port
+		#print 'path:',urlP.path
+		#print 'query:', urlP.query
+		#print 'params', urlP.params
+		# print "SCAN:" + url
+		if urlP.hostname == None:
+			url = urlparse.urljoin(refer, url)
 		return url
 
 	def scanPage(self, url, depth):
@@ -143,6 +153,8 @@ class CrawlerScanner(Scanner):
 			#print len(links), links
 			linkRec = set()
 			for link in links:
+				if re.search(r'^javascript:', link):
+					continue
 				link = self.adjustUrl(url, link)
 				if not link in self._linkList:
 					linkRec.add(link)
@@ -157,54 +169,82 @@ class CrawlerScanner(Scanner):
 		for url in self.scanPage(self._hostRoot, 0):
 			yield url	
 
-if __name__ != "__main__":
-	sys.exit(0)
+#####################################################################
+# vulnerability testers
+
+# look like it's no effection now
+class PhpArrayExposePathTester(Tester):
+	def scan(self, url, scaner):
+		urlP = urlparse.urlparse(url)
+		if re.search(r'\.php$', urlP.path):
+			url.replace('=', '[]=')
+		req = urllib2.Request(url)
+		response = scanner.sendReq(req)
+		if response == None:
+			return
+		respText = response.read()
+		for p in results:
+			if re.search(p , respText):
+				scanner.report(url, respText[:1024])
+
+
+class SqlInjectionTester(Tester):
+	def scan(self, url, scaner):
+		pass
+
+# .git | .svn | .file.swp(vim) | .bak
+class HiddenFileTester(Tester):
+	def scan(self, url, scaner):
+		pass
+
+#####################################################################
+if __name__ == "__main__":
 	
-def usage():
-	helpMsg = sys.argv[0] + """ [opt] host			
+	def usage():
+		helpMsg = sys.argv[0] + """ [opt] host			
+		
+		-a show all exist page
+		-e add custom error message
+		-f config file. default ./config
+		-h show help message
+		-w wait time."""	
+		print helpMsg 
+		sys.exit(0)
 	
-	-a show all exist page
-	-e add custom error message
-	-f config file. default ./config
-	-h show help message
-	-w wait time."""	
-	print helpMsg 
-	sys.exit(0)
-
-opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hpw:")
-#print opts
-#print args
-for op, value in opts:
-	if op == '-a':
-		checkAll = True
-	elif op == '-d':
-		scanDepth = int(value)
-	elif op == "-e":
-		results.append(value)	
-	elif op == "-f":
-		config = value
-	elif op == "-h":
-		usage()
-	elif op == '-p':
-		scanType = 1
-	elif op == "-w":		
-		scanWait = float(value)
-
-urlRoot = args[0]
-
-if config[-1] != '/':
-	config += '/'
-
-if not re.search(r'^http://', urlRoot):
-	urlRoot = 'http://' + urlRoot
-
-if scanType == 0:
-	ls = os.listdir(config)
-	for path in ls:
-		if re.search('\.txt$', path):
-			print 'List scanning: [', urlRoot, config + path, ']'
-			scanner = ListScanner(urlRoot, config + path)
-			scanner.scan()
-elif scanType == 1:
-	scanner = CrawlerScanner(urlRoot, ())
-	scanner.scan()
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hpw:")
+	#print opts
+	#print args
+	for op, value in opts:
+		if op == '-a':
+			checkAll = True
+		elif op == '-d':
+			scanDepth = int(value)
+		elif op == "-e":
+			results.append(value)	
+		elif op == "-f":
+			config = value
+		elif op == "-h":
+			usage()
+		elif op == '-p':
+			scanType = 1
+		elif op == "-w":		
+			scanWait = float(value)
+	
+	urlRoot = args[0]
+	
+	if config[-1] != '/':
+		config += '/'
+	
+	if not re.search(r'^http://', urlRoot):
+		urlRoot = 'http://' + urlRoot
+	
+	if scanType == 0:
+		ls = os.listdir(config)
+		for path in ls:
+			if re.search('\.txt$', path):
+				print 'List scanning: [', urlRoot, config + path, ']'
+				scanner = ListScanner(urlRoot, config + path)
+				scanner.scan()
+	elif scanType == 1:
+		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(),))
+		scanner.scan()

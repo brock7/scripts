@@ -23,7 +23,7 @@ reqTimeout = 30
 
 hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip', 
 	'ext:conf', 'ext:rar', 'ext:sh', 'ext:gz', 'ext:bz2', 'ext:tar', 'ext:tgz', 
-	'ext:mdb', 'ext:ini', 'ext:7z', "#", 
+	'ext:mdb', 'ext:ini', 'ext:7z', 'ext:cgi', "#", 
 	'inurl:filename', 'inurl:upload', 'inurl:profile 管理员', 
 	'inurl:file', 'inurl:down', 'inurl:passwd', 'inurl:path', "#", 
 	'intitle:"index.of"', 'intitle:管理 ', "#",
