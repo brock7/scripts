@@ -210,7 +210,10 @@ class CrawlerScanner(Scanner):
 
 #####################################################################
 # vulnerability testers
-
+"""
+http://bbs.drvsky.com/read.php?tid[]=2679
+Fatal error: Unsupported operand types in /home/wwwroot/drvsky/require/guestfunc.php on line 23
+"""
 # look like it's no effection now
 class PhpArrayExposePathTester(Tester):
 	def scan(self, url, scaner):
@@ -225,7 +228,7 @@ class PhpArrayExposePathTester(Tester):
 				if response == None:
 					return
 				respText = response.read()
-				if re.search('', respText):
+				if re.search('Fatal error', respText):
 					scanner.report(url, respText[:512])
 
 
