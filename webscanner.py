@@ -188,7 +188,7 @@ class CrawlerScanner(Scanner):
 						linkRec.add(link)
 						print link
 						yield link
-			self._linkList.union(linkRec)
+			self._linkList = self._linkList.union(linkRec)
 			for link in linkRec:				
 				for link2 in self.scanPage(link, depth):
 					yield link2
