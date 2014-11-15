@@ -11,7 +11,8 @@ import errno
 #import pdb
 
 config = './config'
-checkAll = False
+wait = 0
+scanType = 0 # 0 list, 1 crawler
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -26,7 +27,11 @@ user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Fire
 	Chrome/28.0.1468.0 Safari/537.36', \
 	'Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0', 
 	'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
-	
+
+class Tester:
+	def scan(self, url, scaner):
+		pass
+
 results = [
 	"<b>Fatal error</b>:", 
 	"Access Denied",
@@ -35,77 +40,89 @@ results = [
 	r'ERROR [0-9]+?:', 
 ];
 
-class ScanHandler: 
-		
-	# return a generator or iterator
-	def requests(self):
-		return ()
-	
-	# return (result, response_text)
-	def filterResponse(self, request, response):
-		return True, ""
-
-class FileScanHandler(ScanHandler):
-	def __init__(self, host, fileName):
-		self._host = host
-		self._lines = open(fileName).readlines();
-		
-	def requests(self):
-		for uri in self._lines:
-			if uri[0] != '/':
-				uri = '/' + uri
-			yield urllib2.Request(self._host + uri)
-
-	def filterResponse(self, request, response):
+class SimpleTester(Tester):
+	def scan(self, url, scanner):
+		# print url
+		req = urllib2.Request(url)
+		response = scanner.sendReq(req)
+		if response == None:
+			return
 		respText = response.read()
-		if checkAll:
-			return True, respText
 		for p in results:
 			if re.search(p , respText):
-				return True, respText
-		return False, respText
+				scanner.report(url, respText[:1024])
 
-class WebScanner:
-
-	opener = None
-	wait = 0
+class Scanner:
+	_opener = None	
+	_testers = []
 	
 	def __init__(self):
 		pass
 	
+	def report(self, url, msg):
+		print '=' * 60
+		print '[URL] ' + url
+		print '[MESSAGE] ' + msg
+		
 	def sendReq(self, request, data = None, timeout = 15):
 		index = random.randint(0, len(user_agents) - 1)
 		user_agent = user_agents[index]
 		request.add_header('User-agent', user_agent)
 		try:
-			response = self.opener.open(request, data = data, timeout = timeout)
+			response = self._opener.open(request, data = data, timeout = timeout)
 		except Exception,e:
 			#print e
 			return None
 		return response
 	
-	def scan(self, hostRoot, uriFile, saveCookie = False):
+	def getUrls(self):
+		return ()
+
+	def scanUrl(self, url):
+		for tester in self._testers:
+			tester.scan(url, self)
+				
+	def scan(self, saveCookie = False):
 		#pdb.set_trace()
-		print '=' * 60
+		# print '=' * 60
 		if saveCookie:
 			cookieJar = cookielib.CookieJar()
-			self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
+			self._opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
 		else:
-			self.opener = urllib2.build_opener()
-		scanHandler = FileScanHandler(hostRoot, uriFile)
-		for req in scanHandler.requests():
-			response = self.sendReq(req)
-			if response:
-				result, respText = scanHandler.filterResponse(req, response)
-				if result:
-					print req.get_full_url()
-					print respText[:1024]
-				print '=' * 60				
-			if self.wait > 0:
-				time.sleep(self.wait)
-
+			self._opener = urllib2.build_opener()
+		
+		urls = self.getUrls()
+		
+		for url in urls:
+			self.scanUrl(url)
+			if wait > 0:
+				time.sleep(wait)
 		return True
+	
+class ListScanner(Scanner):
+	
+	def __init__(self, hostRoot, fileName, testers = [SimpleTester()]):
+		self._hostRoot = hostRoot
+		self._fileName = fileName
+		self._testers = testers
+		
+	def getUrls(self):
+		for uri in open(self._fileName).readlines():
+			if uri[0] != '/':
+					uri = '/' + uri
+			yield self._hostRoot + uri
 
+class CrawlerScanner(Scanner):
+	def __init__(self, hostRoot, testers = [SimpleTester()]):
+		self._hostRoot = hostRoot
+		self._testers = testers
+
+	def getUrls(self):
+		return ()
+		
+if __name__ != "__main__":
+	sys.exit(0)
+	
 def usage():
 	helpMsg = sys.argv[0] + """ [opt] host			
 	
@@ -117,9 +134,7 @@ def usage():
 	print helpMsg 
 	sys.exit(0)
 
-scanner = WebScanner()	
-
-opts, args = getopt.getopt(sys.argv[1:], "ae:f:hw:")
+opts, args = getopt.getopt(sys.argv[1:], "ae:f:hpw:")
 #print opts
 #print args
 for op, value in opts:
@@ -131,18 +146,27 @@ for op, value in opts:
 		config = value
 	elif op == "-h":
 		usage()
+	elif op == '-p':
+		scanType = 1
 	elif op == "-w":		
-		scanner.wait = float(value)
+		wait = float(value)
 
-host = args[0]
+urlRoot = args[0]
+
 if config[-1] != '/':
 	config += '/'
 
-if not re.search(r'^http://', host):
-	host = 'http://' + host
+if not re.search(r'^http://', urlRoot):
+	urlRoot = 'http://' + urlRoot
 
-ls = os.listdir(config)
-for path in ls:
-	if re.search('\.txt$', path):
-		print host, config + path
-		scanner.scan(host, config + path)
+if scanType == 0:
+	ls = os.listdir(config)
+	for path in ls:
+		if re.search('\.txt$', path):
+			print 'List scanning: [', urlRoot, config + path, ']'
+			scanner = ListScanner(urlRoot, config + path)
+			scanner.scan()
+elif scanType == 1:
+	scanner = CrawlerScanner(urlRoot)
+	scanner.scan()
+	
