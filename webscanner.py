@@ -167,6 +167,7 @@ class CrawlerScanner(Scanner):
 		#print 'params', urlP.params
 		if urlP.hostname == None:
 			url = urlparse.urljoin(refer, url)
+		url = url.replace('&amp;', '&')
 		return url
 
 	def scanPage(self, url, depth):
@@ -193,7 +194,7 @@ class CrawlerScanner(Scanner):
 				if not link in self._linkList and not link in linkRec:
 					if link.find(self._range) != -1:
 						linkRec.add(link)
-						print link
+						print '=>' + link
 						yield link
 			self._linkList = self._linkList.union(linkRec)
 			for link in linkRec:				
@@ -202,7 +203,7 @@ class CrawlerScanner(Scanner):
 
 	def getUrls(self):
 		self._linkList.add(self._hostRoot)
-		print self._hostRoot
+		print '=>' + self._hostRoot
 		yield self._hostRoot
 		for url in self.scanPage(self._hostRoot, 0):
 			yield url	
@@ -215,15 +216,17 @@ class PhpArrayExposePathTester(Tester):
 	def scan(self, url, scaner):
 		urlP = urlparse.urlparse(url)
 		if re.search(r'\.php$', urlP.path):
-			url.replace('=', '[]=')
-		req = urllib2.Request(url)
-		response = scanner.sendReq(req)
-		if response == None:
-			return
-		respText = response.read()
-		for p in results:
-			if re.search(p , respText):
-				scanner.report(url, respText[:1024])
+			if url.find('=') != -1:
+				url = url.replace('=', '[]=')
+				#print url
+
+				req = urllib2.Request(url)
+				response = scanner.sendReq(req)
+				if response == None:
+					return
+				respText = response.read()
+				if re.search('', respText):
+					scanner.report(url, respText[:512])
 
 
 class SqlInjectionTester(Tester):
@@ -270,11 +273,14 @@ class HiddenFileTester(Tester):
 		path3 = pathItems[0][pathItems[0].rfind('/') + 1 :]
 		#print "path3 = " + path3
 		#print path, path2, path3
-		files = [path + '.' + pathItems[1] + '.swp', 
-			path + pathItems[1] + '.bak', 			
-			file + '.zip', file + '.rar', file + '.tar.gz', 
-			file + '.tar.bz2', file + '.tgz', file + '.tbz', 
-			file + '.tar', file + '.7z']
+		if file[-1:] != '/':
+			files = [path + '.' + pathItems[1] + '.swp', 
+				path + pathItems[1] + '.bak', 			
+				file + '.zip', file + '.rar', file + '.tar.gz', 
+				file + '.tar.bz2', file + '.tgz', file + '.tbz', 
+				file + '.tar', file + '.7z']
+		else:
+			files = []
 		if len(path3) > 0:
 			files.extend((path2 + '.zip', path2 + '.rar', path2 + '.tar.gz', 
 				path2 + '.tar.bz2', path2 + '.tgz', path2 + '.tbz', 
@@ -304,8 +310,8 @@ class HiddenFileTester(Tester):
 			self._pathRec.add(path)
 			self.scanDir(path, scanner)
 		#req = urllib2.Request(url)
-		if file != path:
-			self.scanFile(path, file, scanner)
+		#if file != path:
+		self.scanFile(path, file, scanner)
 
 #####################################################################
 if __name__ == "__main__":
@@ -358,5 +364,5 @@ if __name__ == "__main__":
 				scanner = ListScanner(urlRoot, config + path)
 				scanner.scan()
 	elif scanType == 1:
-		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(),))
+		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
 		scanner.scan()
