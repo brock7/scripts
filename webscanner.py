@@ -252,7 +252,7 @@ class HiddenFileTester(Tester):
 			respText = respText.decode('utf-8').encode(locale.getdefaultlocale()[1])			
 		except Exception, e:
 			pass
-		if respText.find(notFoundInfo) == -1:
+		if not re.search(notFoundInfo, respText):
 			scanner.report(url, respText[:512])
 	
 	_dirs = ('.svn/entries', '.git/config')
