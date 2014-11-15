@@ -59,10 +59,13 @@ class SimpleTester(Tester):
 		response = scanner.sendReq(req)
 		if response == None:
 			return
-		respText = response.read()
-		for p in results:
-			if re.search(p , respText):
-				scanner.report(url, respText[:1024])
+		try:
+			respText = response.read()
+			for p in results:
+				if re.search(p , respText):
+					scanner.report(url, respText[:1024])
+		except:
+			pass
 
 class Scanner:
 	_opener = None	
@@ -174,7 +177,10 @@ class CrawlerScanner(Scanner):
 			response = self.sendReq(req)
 			if response == None:
 				raise StopIteration()
-			html = response.read()
+			try:
+				html = response.read()
+			except:
+				raise StopIteration()
 			#tree = etree.HTML(html)
 			#links = tree.xpath(r"/a//@href")			
 			links = self._reexp.findall(html)
@@ -238,8 +244,10 @@ class HiddenFileTester(Tester):
 		if type(response) == types.StringType:
 			respText = response
 		else:
-			respText = response.read()
-			
+			try:
+				respText = response.read()
+			except:
+				return			
 		try:
 			respText = respText.decode('utf-8').encode(locale.getdefaultlocale()[1])			
 		except Exception, e:
