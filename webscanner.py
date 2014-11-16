@@ -330,6 +330,10 @@ class HiddenFileTester(Tester):
 			respText = response
 		else:
 			try:
+				if response.geturl() != url and response.geturl() != url + '/':
+					# jumped, ignore?
+					#print response.geturl(), url
+					return
 				respText = response.read()
 			except:
 				return			
