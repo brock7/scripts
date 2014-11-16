@@ -19,9 +19,10 @@ import getopt
 #import pdb
 import urlparse
 import types
-#import locale
+import locale
 #import socket
 import string
+import codecs
 
 checkAll = False
 verbose = False
@@ -258,6 +259,13 @@ class PhpArrayExposePathTester(Tester):
 					respText = response.read()
 				except:
 					return
+				try:
+					if respText[:3] == codecs.BOM_UTF8:
+						respText = respText[3:]
+					respText = respText.decode('utf8')
+				except Exception, e:
+					pass
+				
 				if checkAll:
 					scanner.report(url, respText[:512])
 					return
@@ -309,11 +317,14 @@ class HiddenFileTester(Tester):
 			except:
 				return			
 		try:
-			respText = respText.decode('utf-8').encode(locale.getdefaultlocale()[1])			
+			if respText[:3] == codecs.BOM_UTF8:
+				respText = respText[3:]
+			respText = respText.decode('utf8')
 		except Exception, e:
 			pass
-		if self.isBinFileType(url) and self.isPrintableText(respText[:64]):
+		if self.isBinFileType(url) and self.isPrintableText(respText[:32]):
 			return
+
 		if not re.search(notFoundInfo, respText):
 			scanner.report(url, respText[:512])
 	
@@ -428,7 +439,8 @@ if __name__ == "__main__":
 		elif op == '-k':
 			cookie = value
 		elif op == '-n':
-			notFoundInfo = value
+			notFoundInfo = value.decode(locale.getpreferredencoding())
+			print
 		elif op == '-p':
 			scanType = 1
 		elif op == '-s':
