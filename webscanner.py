@@ -175,6 +175,7 @@ class CrawlerScanner(Scanner):
 		self._hostRoot = hostRoot
 		urlP = urlparse.urlparse(hostRoot)
 		
+		# FIXME: _range has a bug. some url isn't in the range 
 		if urlP.hostname.count('.') > 1:
 			self._range = urlP.hostname[urlP.hostname.find('.') + 1:]
 		else:
@@ -347,7 +348,10 @@ class HiddenFileTester(Tester):
 
 	def scanDynamic(self, path, file, scanner):
 		urlP = urlparse.urlparse(file)
-		pathItems = os.path.split(urlP.path)
+		try:
+			pathItems = os.path.split(urlP.path)
+		except:
+			return
 		#print pathItems
 		path2 = path[:-1]; # no last '/'
 		curdir = pathItems[0][pathItems[0].rfind('/') + 1 :]
@@ -440,7 +444,6 @@ if __name__ == "__main__":
 			cookie = value
 		elif op == '-n':
 			notFoundInfo = value.decode(locale.getpreferredencoding())
-			print
 		elif op == '-p':
 			scanType = 1
 		elif op == '-s':
