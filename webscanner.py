@@ -17,8 +17,9 @@ import getopt
 #import pdb
 import urlparse
 import types
-import locale
+#import locale
 #import socket
+import string
 
 checkAll = False
 config = './config'
@@ -267,7 +268,21 @@ class SqlInjectionTester(Tester):
 # .git | .svn | .file.swp(vim) | file.bak | dir.rar(zip tar tar.gz tar.bz2 tgz tbz)
 class HiddenFileTester(Tester):
 	_pathRec = set()
-	
+	_textExt = ('entries', 'config', '.bak', '.swp', 
+			'.html', '.htm', '.php', '.jsp', '.asp', '.aspx', '.txt')
+
+	def isBinFileType(self, url):
+		for ext in self._textExt:
+			if url[-len(ext):] == ext:
+				return False
+		return True
+
+	def isPrintableText(self, content):
+		for c in content:
+			if not c in string.printable:
+				return False
+		return True
+
 	def scanUrl(self, url):
 		#print url
 		req = urllib2.Request(url)
@@ -286,6 +301,8 @@ class HiddenFileTester(Tester):
 			respText = respText.decode('utf-8').encode(locale.getdefaultlocale()[1])			
 		except Exception, e:
 			pass
+		if self.isBinFileType(url) and self.isPrintableText(respText[:64]):
+			return
 		if not re.search(notFoundInfo, respText):
 			scanner.report(url, respText[:512])
 	
