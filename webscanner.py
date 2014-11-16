@@ -268,11 +268,11 @@ class SqlInjectionTester(Tester):
 # .git | .svn | .file.swp(vim) | file.bak | dir.rar(zip tar tar.gz tar.bz2 tgz tbz)
 class HiddenFileTester(Tester):
 	_pathRec = set()
-	_textExt = ('entries', 'config', '.bak', '.swp', 
+	_textExts = ('entries', 'config', '.bak', '.swp', 
 			'.html', '.htm', '.php', '.jsp', '.asp', '.aspx', '.txt')
 
 	def isBinFileType(self, url):
-		for ext in self._textExt:
+		for ext in self._textExts:
 			if url[-len(ext):] == ext:
 				return False
 		return True
@@ -315,6 +315,13 @@ class HiddenFileTester(Tester):
 			url = path + dir
 			self.scanUrl(url)
 	
+	_ignoreExts = ('.html', '.htm')
+	def isIgnoreFileType(self, url):
+		for ext in self._ignoreExts:
+			if url[-len(ext):] == ext:
+				return True
+		return False
+
 	def scanDynamic(self, path, file, scanner):
 		urlP = urlparse.urlparse(file)
 		pathItems = os.path.split(urlP.path)
@@ -323,7 +330,7 @@ class HiddenFileTester(Tester):
 		path3 = pathItems[0][pathItems[0].rfind('/') + 1 :]
 		#print "path3 = " + path3
 		#print path, path2, path3
-		if file[-1:] != '/':
+		if file[-1:] != '/' and not self.isIgnoreFileType(file):
 			files = [path + '.' + pathItems[1] + '.swp', 
 				path + pathItems[1] + '.bak', file + '2', 			
 				file + '.zip', file + '.rar', file + '.tar.gz', 
