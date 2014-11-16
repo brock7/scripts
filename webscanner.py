@@ -68,7 +68,18 @@ class SimpleTester(Tester):
 		if response == None:
 			return
 		try:
+			if response.geturl() != url and response.geturl() != url + '/':
+				#print response.geturl(), url
+				return
 			respText = response.read()
+			#print respText
+			if respText[:3] == codecs.BOM_UTF8:
+				respText = respText[3:]
+			try:
+				respText = respText.decode('utf8')
+			except:
+				pass
+
 			if checkAll:
 				scanner.report(url, respText[:512])
 				return
@@ -89,7 +100,8 @@ class Scanner:
 	def report(self, url, msg):
 		print '=' * 60
 		print '[URL] ' + url
-		print '[MESSAGE] ' + msg
+		print '[MESSAGE]' 
+		print msg
 		print '=' * 60
 		
 	def sendReq(self, request, data = None, timeout = 15):
@@ -112,7 +124,7 @@ class Scanner:
 			else:
 				return None
 		except Exception,e:
-			print 'Exception:', e
+			print 'Exception: ' + repr(e)
 			return None
 		except:
 			return None
@@ -158,9 +170,13 @@ class ListScanner(Scanner):
 		
 	def getUrls(self):
 		for uri in open(self._fileName).readlines():
+			uri = uri.strip()
 			if uri[0] != '/':
 					uri = '/' + uri
-			yield self._hostRoot + uri
+			url = self._hostRoot + uri
+			if verbose:
+				print "=>" + url
+			yield url
 
 class CrawlerScanner(Scanner):
 	
@@ -281,7 +297,7 @@ class SqlInjectionTester(Tester):
 # /DZ/Data/BACKUP~1/141010~1.SQL OR /DZ/DATA/BACKUP/???.SQL
 # guess by date     ~~~~~~~~
 # it's effective in winnt
-class DZBackupTester(Tester):
+class DZBackupTester(Tester): # FIXME: change to Scanner, not Tester
 	def scan(self, url, scanner):
 		pass # TODO:
 
