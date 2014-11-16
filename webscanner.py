@@ -3,6 +3,8 @@
 
 #
 # author: Brock | 老妖(laoyaogg@qq.com)
+# date: 2014-11-15
+# ver: 0.5
 #
 
 import sys, os
@@ -260,10 +262,16 @@ class PhpArrayExposePathTester(Tester):
 				if re.search('Fatal error', respText):
 					scanner.report(url, respText[:512])
 
-
 class SqlInjectionTester(Tester):
 	def scan(self, url, scaner):
 		pass
+
+# /DZ/Data/BACKUP~1/141010~1.SQL
+# guess by date     ~~~~~~~~
+# it's effective in winnt
+class DZBackupTester(Tester):
+	def scan(self, url, scanner):
+		pass # TODO:
 
 # .git | .svn | .file.swp(vim) | file.bak | dir.rar(zip tar tar.gz tar.bz2 tgz tbz)
 class HiddenFileTester(Tester):
@@ -315,7 +323,8 @@ class HiddenFileTester(Tester):
 			url = path + dir
 			self.scanUrl(url)
 	
-	_ignoreExts = ('.html', '.htm')
+	_ignoreExts = ('.html', '.htm', '.css')
+
 	def isIgnoreFileType(self, url):
 		for ext in self._ignoreExts:
 			if url[-len(ext):] == ext:
@@ -326,11 +335,14 @@ class HiddenFileTester(Tester):
 		urlP = urlparse.urlparse(file)
 		pathItems = os.path.split(urlP.path)
 		#print pathItems
-		path2 = path[:-1];
-		path3 = pathItems[0][pathItems[0].rfind('/') + 1 :]
-		#print "path3 = " + path3
-		#print path, path2, path3
+		path2 = path[:-1]; # no last '/'
+		curdir = pathItems[0][pathItems[0].rfind('/') + 1 :]
+		#print "curdir = " + curdir
+		#print path, path2, curdir
+
+		# ignore '.htm', '.html', ...
 		if file[-1:] != '/' and not self.isIgnoreFileType(file):
+			# http://www.xxx.com/file.php.bak
 			files = [path + '.' + pathItems[1] + '.swp', 
 				path + pathItems[1] + '.bak', file + '2', 			
 				file + '.zip', file + '.rar', file + '.tar.gz', 
@@ -338,13 +350,18 @@ class HiddenFileTester(Tester):
 				file + '.tar', file + '.7z']
 		else:
 			files = []
-		if len(path3) > 0:
-			files.extend((path2 + '.zip', path2 + '.rar', path2 + '.tar.gz', 
+
+		if len(curdir) > 0:
+			files.extend((
+				# http://www.xxx.com/dir.zip
+				path2 + '.zip', path2 + '.rar', path2 + '.tar.gz', 
 				path2 + '.tar.bz2', path2 + '.tgz', path2 + '.tbz', 
 				path2 + '.tar', path2 + '.7z', 
-				path + path3 + '.zip', path + path3 + '.rar', path + path3 + '.tar.gz', 
-				path + path3 + '.tar.bz2', path + path3 + '.tgz', path + path3 + '.tbz', 
-				path + path3 + '.tar', path + path3 + '.7z', ))
+
+				# http//www.xxx.com/dir/ + dir + '.zip' 
+				path + curdir + '.zip', path + curdir + '.rar', path + curdir + '.tar.gz', 
+				path + curdir + '.tar.bz2', path + curdir + '.tgz', path + curdir + '.tbz', 
+				path + curdir + '.tar', path + curdir + '.7z', ))
 
 		for url in files:
 			self.scanUrl(url)
@@ -371,6 +388,7 @@ class HiddenFileTester(Tester):
 		self.scanDynamic(path, file, scanner)
 
 #####################################################################
+
 if __name__ == "__main__":
 	
 	def usage():
