@@ -96,8 +96,12 @@ class Scanner:
 
 		try:
 			response = self._opener.open(request, data = data, timeout = timeout)
+			if scanWait > 0:
+				time.sleep(scanWait)
 		except urllib2.HTTPError, e:
 			#print e, type(e), dir(e), e.code
+			if scanWait > 0:
+				time.sleep(scanWait)
 			if e.code != 404:
 				return e.msg
 			else:
@@ -116,9 +120,7 @@ class Scanner:
 	def scanUrl(self, url):
 		for tester in self._testers:
 			tester.scan(url, self)
-			if scanWait > 0:
-				time.sleep(scanWait)
-					
+
 	def scan(self):
 		#pdb.set_trace()
 		# print '=' * 60
