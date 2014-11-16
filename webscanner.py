@@ -20,11 +20,14 @@ import types
 import locale
 #import socket
 
+checkAll = False
 config = './config'
 scanWait = 0
 scanType = 0 # 0 list, 1 crawler
 scanDepth = 3
 notFoundInfo = 'Not Found'
+saveCookie = False
+cookie = ''
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -61,9 +64,13 @@ class SimpleTester(Tester):
 			return
 		try:
 			respText = response.read()
+			if checkAll:
+				scanner.report(url, respText[:512])
+				return
+
 			for p in results:
 				if re.search(p , respText):
-					scanner.report(url, respText[:1024])
+					scanner.report(url, respText[:512])
 		except:
 			pass
 
@@ -84,6 +91,9 @@ class Scanner:
 		index = random.randint(0, len(user_agents) - 1)
 		user_agent = user_agents[index]
 		request.add_header('User-agent', user_agent)
+		if len(cookie) > 0:
+			request.add_header('Cookie', cookie)
+
 		try:
 			response = self._opener.open(request, data = data, timeout = timeout)
 		except urllib2.HTTPError, e:
@@ -93,7 +103,7 @@ class Scanner:
 			else:
 				return None
 		except Exception,e:
-			print e
+			print 'Exception:', e
 			return None
 		except:
 			return None
@@ -109,11 +119,19 @@ class Scanner:
 			if scanWait > 0:
 				time.sleep(scanWait)
 					
-	def scan(self, saveCookie = False):
+	def scan(self):
 		#pdb.set_trace()
 		# print '=' * 60
 		if saveCookie:
 			cookieJar = cookielib.CookieJar()
+			"""
+			ck = cookielib.Cookie(version=0, name='Name', value='1', port=None, 
+					port_specified=False, domain='www.example.com', domain_specified=False, 
+					domain_initial_dot=False, path='/', path_specified=True, secure=False, 
+					expires=None, discard=True, comment=None, comment_url=None, 
+					rest={'HttpOnly': None}, rfc2109=False)
+			cj.set_cookie(ck)
+			"""
 			self._opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
 		else:
 			self._opener = urllib2.build_opener()
@@ -181,7 +199,8 @@ class CrawlerScanner(Scanner):
 			try:
 				html = response.read()
 			except:
-				raise StopIteration()
+				#raise StopIteration()
+				html = ''
 			#tree = etree.HTML(html)
 			#links = tree.xpath(r"/a//@href")			
 			links = self._reexp.findall(html)
@@ -227,7 +246,14 @@ class PhpArrayExposePathTester(Tester):
 				response = scanner.sendReq(req)
 				if response == None:
 					return
-				respText = response.read()
+				try:
+					respText = response.read()
+				except:
+					return
+				if checkAll:
+					scanner.report(url, respText[:512])
+					return
+
 				if re.search('Fatal error', respText):
 					scanner.report(url, respText[:512])
 
@@ -261,14 +287,16 @@ class HiddenFileTester(Tester):
 		if not re.search(notFoundInfo, respText):
 			scanner.report(url, respText[:512])
 	
-	_dirs = ('.svn/entries', '.git/config')
+	_dirs = ('.svn/entries', '.git/config', 
+			'backup.zip', 'backup.rar', 'backup.tar.gz', 'backup.tar.bz2', 
+			'backup.tgz', 'backup.tbz', 'backup.tar', 'backup.7z')
 	
-	def scanDir(self, path, scanner):
+	def scanFixed(self, path, scanner):
 		for dir in self._dirs:
 			url = path + dir
 			self.scanUrl(url)
 	
-	def scanFile(self, path, file, scanner):
+	def scanDynamic(self, path, file, scanner):
 		urlP = urlparse.urlparse(file)
 		pathItems = os.path.split(urlP.path)
 		#print pathItems
@@ -278,7 +306,7 @@ class HiddenFileTester(Tester):
 		#print path, path2, path3
 		if file[-1:] != '/':
 			files = [path + '.' + pathItems[1] + '.swp', 
-				path + pathItems[1] + '.bak', 			
+				path + pathItems[1] + '.bak', file + '2', 			
 				file + '.zip', file + '.rar', file + '.tar.gz', 
 				file + '.tar.bz2', file + '.tgz', file + '.tbz', 
 				file + '.tar', file + '.7z']
@@ -311,10 +339,10 @@ class HiddenFileTester(Tester):
 		
 		if not path in self._pathRec:
 			self._pathRec.add(path)
-			self.scanDir(path, scanner)
+			self.scanFixed(path, scanner)
 		#req = urllib2.Request(url)
 		#if file != path:
-		self.scanFile(path, file, scanner)
+		self.scanDynamic(path, file, scanner)
 
 #####################################################################
 if __name__ == "__main__":
@@ -323,14 +351,19 @@ if __name__ == "__main__":
 		helpMsg = sys.argv[0] + """ [opt] host			
 		
 		-a show all exist page
+		-d <depth>	scanning depth
 		-e add custom error message
 		-f config file. default ./config
 		-h show help message
+		-k <cookie>	set cookie
+		-n <keyword> filter out the keyword
+		-p <scanType> 0 list 1 crawler. default 0
+		-s save cookie
 		-w wait time."""	
 		print helpMsg 
 		sys.exit(0)
 	
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hn:pw:")
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:psw:")
 	#print opts
 	#print args
 	for op, value in opts:
@@ -344,10 +377,14 @@ if __name__ == "__main__":
 			config = value
 		elif op == "-h":
 			usage()
+		elif op == '-k':
+			cookie = value
 		elif op == '-n':
 			notFoundInfo = value
 		elif op == '-p':
 			scanType = 1
+		elif op == '-s':
+			saveCookie = True
 		elif op == "-w":		
 			scanWait = float(value)
 	
