@@ -24,6 +24,7 @@ import types
 import string
 
 checkAll = False
+verbose = False
 config = './config'
 scanWait = 0
 scanType = 0 # 0 list, 1 crawler
@@ -218,7 +219,8 @@ class CrawlerScanner(Scanner):
 				if not link in self._linkList and not link in linkRec:
 					if link.find(self._range) != -1:
 						linkRec.add(link)
-						print '=>' + link
+						if verbose:
+							print '=>' + link
 						yield link
 			self._linkList = self._linkList.union(linkRec)
 			for link in linkRec:				
@@ -227,7 +229,8 @@ class CrawlerScanner(Scanner):
 
 	def getUrls(self):
 		self._linkList.add(self._hostRoot)
-		print '=>' + self._hostRoot
+		if verbose:
+			print '=>' + self._hostRoot
 		yield self._hostRoot
 		for url in self.scanPage(self._hostRoot, 0):
 			yield url	
@@ -266,7 +269,7 @@ class SqlInjectionTester(Tester):
 	def scan(self, url, scaner):
 		pass
 
-# /DZ/Data/BACKUP~1/141010~1.SQL
+# /DZ/Data/BACKUP~1/141010~1.SQL OR /DZ/DATA/BACKUP/???.SQL
 # guess by date     ~~~~~~~~
 # it's effective in winnt
 class DZBackupTester(Tester):
@@ -403,11 +406,12 @@ if __name__ == "__main__":
 		-n <keyword> filter out the keyword
 		-p <scanType> 0 list 1 crawler. default 0
 		-s save cookie
+		-v verbose
 		-w wait time."""	
 		print helpMsg 
 		sys.exit(0)
 	
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:psw:")
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:psvw:")
 	#print opts
 	#print args
 	for op, value in opts:
@@ -429,6 +433,8 @@ if __name__ == "__main__":
 			scanType = 1
 		elif op == '-s':
 			saveCookie = True
+		elif op == '-v':
+			verbose = True
 		elif op == "-w":		
 			scanWait = float(value)
 	
