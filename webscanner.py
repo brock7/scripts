@@ -520,11 +520,13 @@ if __name__ == "__main__":
 			if re.search('\.txt$', path):
 				print 'List scanning: [', urlRoot, config + path, ']'
 				scanner = ListScanner(urlRoot, config + path)
+				scanner.scan()
 	elif scanType == 1:
 		if not re.search(r'^http://', urlRoot):
 			urlRoot = 'http://' + urlRoot
 		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
+		scanner.scan()
 	elif scanType == 2:
 		scanner = GoogleScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
-	scanner.scan()
+		scanner.scan()
 
