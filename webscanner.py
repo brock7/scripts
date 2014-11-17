@@ -35,6 +35,7 @@ saveCookie = False
 cookie = ''
 searchPage = 10
 googleWhat = ''
+ofile = sys.stdout
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -49,6 +50,13 @@ user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Fire
 	Chrome/28.0.1468.0 Safari/537.36', \
 	'Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0', 
 	'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
+
+def log(str):
+	str += '\n'
+	ofile.write(str)
+	ofile.flush()
+	if ofile != sys.stdout:
+		sys.stdout.write(str)
 
 class Tester:
 	def scan(self, url, scaner):
@@ -104,11 +112,11 @@ class Scanner:
 		pass
 	
 	def report(self, url, msg):
-		print '=' * 60
-		print '[URL] ' + url
-		print '[MESSAGE]' 
-		print msg
-		print '=' * 60
+		log('=' * 60)
+		log('[URL] ' + url)
+		log('[MESSAGE]')
+		log(msg)
+		log('=' * 60)
 		
 	def sendReq(self, request, data = None, timeout = 15):
 		index = random.randint(0, len(user_agents) - 1)
@@ -130,7 +138,8 @@ class Scanner:
 			else:
 				return None
 		except Exception,e:
-			print 'Exception: ' + repr(e) + 'at :' + request.get_full_url()
+			if verbose:
+				log('Exception: ' + repr(e) + 'at :' + request.get_full_url())
 			return None
 		except:
 			return None
@@ -181,7 +190,7 @@ class ListScanner(Scanner):
 					uri = '/' + uri
 			url = self._hostRoot + uri
 			if verbose:
-				print "=>" + url
+				log("=>" + url)
 			yield url
 
 class CrawlerScanner(Scanner):
@@ -247,7 +256,7 @@ class CrawlerScanner(Scanner):
 					if link.find(self._range) != -1:
 						linkRec.add(link)
 						if verbose:
-							print '=>' + link
+							log('=>' + link)
 						yield link
 			self._linkList = self._linkList.union(linkRec)
 			for link in linkRec:				
@@ -257,7 +266,7 @@ class CrawlerScanner(Scanner):
 	def getUrls(self):
 		self._linkList.add(self._hostRoot)
 		if verbose:
-			print '=>' + self._hostRoot
+			log('=>' + self._hostRoot)
 		yield self._hostRoot
 		for url in self.scanPage(self._hostRoot, 0):
 			yield url	
@@ -281,7 +290,7 @@ class GoogleScanner(Scanner):
 			# print len(self._urls)
 		for url in urls:
 			if verbose:
-				print '=>' + url
+				log('=>' + url)
 			yield url
 
 #####################################################################
@@ -474,6 +483,7 @@ if __name__ == "__main__":
 		-k <cookie>	set cookie
 		-n <keyword> filter out the keyword
 		-N <keyword> extra filter
+		-o output file
 		-p <searchPage>  default 5
 		-s save cookie
 		-t <scanType> 0 list, 1 crawler, 2 google. default 0
@@ -485,9 +495,11 @@ if __name__ == "__main__":
 	reload(sys)
 	sys.setdefaultencoding(locale.getpreferredencoding())
 
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:N:st:vw:")
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:N:o:st:vw:")
 	#print opts
 	#print args
+
+	outfile = ''
 	for op, value in opts:
 		if op == '-a':
 			checkAll = True
@@ -507,6 +519,8 @@ if __name__ == "__main__":
 			notFoundInfo = value.decode(locale.getpreferredencoding())
 		elif op == '-N':
 			notFoundInfo += '|' + value.decode(locale.getpreferredencoding())
+		elif op == '-o':
+			outfile = value
 		elif op == '-p':
 			searchPage = int(value)
 		elif op == '-s':
@@ -520,6 +534,13 @@ if __name__ == "__main__":
 		elif op == "-w":		
 			scanWait = float(value)
 	
+	try:
+		if len(outfile) > 0:
+			ofile = open(outfile, "w")
+	except:
+		print 'cannot open: ' + outfile
+		sys.exit(-1)
+
 	urlRoot = args[0]
 	
 	if config[-1] != '/':
@@ -531,7 +552,7 @@ if __name__ == "__main__":
 		ls = os.listdir(config)
 		for path in ls:
 			if re.search('\.txt$', path):
-				print 'List scanning: [', urlRoot, config + path, ']'
+				log('List scanning: [' + urlRoot + " " + config + path + ']')
 				scanner = ListScanner(urlRoot, config + path)
 				scanner.scan()
 	elif scanType == 1:
