@@ -482,7 +482,7 @@ if __name__ == "__main__":
 		print helpMsg 
 		sys.exit(0)
 	
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:st:vw:")
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:N:st:vw:")
 	#print opts
 	#print args
 	for op, value in opts:
@@ -503,7 +503,7 @@ if __name__ == "__main__":
 		elif op == '-n':
 			notFoundInfo = value.decode(locale.getpreferredencoding())
 		elif op == '-N':
-			notFoundInfo += value.decode(locale.getpreferredencoding())
+			notFoundInfo += '|' + value.decode(locale.getpreferredencoding())
 		elif op == '-p':
 			searchPage = int(value)
 		elif op == '-s':
