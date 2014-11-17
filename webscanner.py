@@ -382,7 +382,7 @@ class HiddenFileTester(Tester):
 			url = path + dir
 			self.scanUrl(url)
 	
-	_ignoreExts = ('.html', '.htm', '.css')
+	_ignoreExts = ('.html', '.htm', '.css', '.pdf')
 
 	def isIgnoreFileType(self, url):
 		for ext in self._ignoreExts:
