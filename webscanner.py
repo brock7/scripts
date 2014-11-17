@@ -473,6 +473,7 @@ if __name__ == "__main__":
 		-h show help message
 		-k <cookie>	set cookie
 		-n <keyword> filter out the keyword
+		-N <keyword> extra filter
 		-p <searchPage>  default 5
 		-s save cookie
 		-t <scanType> 0 list, 1 crawler, 2 google. default 0
@@ -501,6 +502,8 @@ if __name__ == "__main__":
 			cookie = value
 		elif op == '-n':
 			notFoundInfo = value.decode(locale.getpreferredencoding())
+		elif op == '-N':
+			notFoundInfo += value.decode(locale.getpreferredencoding())
 		elif op == '-p':
 			searchPage = int(value)
 		elif op == '-s':
