@@ -17,9 +17,12 @@ import random
 from lxml import etree
 import time
 
-#googleHome = 'http://www.google.com.hk/'
-googleHome = 'http://www.gfsoso.com/'
-reqTimeout = 30
+googleHome = 'http://www.google.com.hk/'
+gfsosoHome = 'http://www.gfsoso.com/'
+reqTimeout = 15
+opener = None
+verbose = True
+waitForPerReq = 0.0
 
 hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip', 
 	'ext:conf', 'ext:rar', 'ext:sh', 'ext:gz', 'ext:bz2', 'ext:tar', 'ext:tgz', 
@@ -62,18 +65,23 @@ def url_filter(url, host):
 	return True
 
 def requestUrl(url):
+	global opener
 	request = urllib2.Request(url)
 	index = random.randint(0, len(user_agents) - 1)
 	user_agent = user_agents[index]
 	request.add_header('User-agent', user_agent)
 
-	response = urllib2.urlopen(request, data = None, timeout = reqTimeout)
+	response = opener.open(request, data = None, timeout = reqTimeout)
 	return response
 
-def Google(host, what):
+def defaultReport(url):
+	print url
+
+def googleSearch(host, what, page = 1, report = defaultReport):
 	global opener
-	print(('\n* google site:%s %s' % (host, what)).\
-		decode('utf-8').encode(sys.getfilesystemencoding()))
+	if verbose:
+		print(('\n* google site:%s %s' % (host, what)).\
+			decode('utf-8').encode(sys.getfilesystemencoding()))
 	what = urllib2.quote("site:%s %s" % (host, what))
 	url = googleHome + 'search?hl=en&num=100&q=%s' % what
 	#print url
@@ -93,49 +101,57 @@ def Google(host, what):
 			url = node
 		else:
 			url = m.group(1)
-		print node, host, url
+		#print node, host, url
 		if not url_filter(node, host):
 			continue
-		print url
+		report(url)
 	return
 
-def gf(host, what):
+def gfsosoSearch(host, what, page = 1, report = defaultReport):
+	#import pdb
+	#pdb.set_trace()
 	global opener
-	print(('\n* google site:%s %s' % (host, what)).\
-		decode('utf-8').encode(sys.getfilesystemencoding()))
+	if verbose:
+		print(('\n* google site:%s %s' % (host, what)).\
+			decode('utf-8').encode(sys.getfilesystemencoding()))
+	
 	what = urllib2.quote("site:%s %s" % (host, what))
-	url = googleHome + 'search?hl=en&num=100&q=%s' % what
-	#print url
-	#response = opener.open(url, data = None, timeout = 10)
-	try:
-		response = requestUrl(url)
-	except:
-		print 'cannot open %s' % url
-		return
-	#print 'after'
-	html = response.read()
-	#print html
-	#tree = etree.HTML(html)
-	#nodes = tree.xpath(r"/a//@href")
-	nodes = re.findall(r' href=\\["\'](.*?)\\["\']', html)
-	#print "node count: ", len(nodes), " html len: ", len(html)
-	for node in nodes:
-		#print node
-		m = re.search('/url\?q=([^&]+)', node)
-		if m == None:
-			url = node
-		else:
-			url = m.group(1)
-		#print node, host, url
-		if not url_filter(url, host):
-			continue
+	#print what
+	for i in range(page):
+		url = gfsosoHome + 'search?hl=en&pn=%d&q=%s' % (i * 10, what)
+		#print url
+		#response = opener.open(url, data = None, timeout = 10)
+		try:
+			response = requestUrl(url)
+		except Exception,e :
+			print 'cannot open %s(%s)' % (url, repr(e))
+			return
+		#print 'after'
+		html = response.read()
+		#print html
+		#tree = etree.HTML(html)
+		#nodes = tree.xpath(r"/a//@href")
+		nodes = re.findall(r' href=\\["\'](.*?)\\["\']', html)
+		#print "node count: ", len(nodes), " html len: ", len(html)
+		for node in nodes:
+			#print node
+			m = re.search('/url\?q=([^&]+)', node)
+			if m == None:
+				url = node
+			else:
+				url = m.group(1)
+			#print node, host, url
+			if not url_filter(url, host):
+				continue
 
-		url = url.replace('\\', '')
-		url = url.replace('&amp;', '&')
-		print url
+			url = url.replace('\\', '')
+			url = url.replace('&amp;', '&')
+			report(url)
+			if waitForPerReq > 0:
+				time.sleep(waitForPerReq)
 	return
 
-google = gf
+google = gfsosoSearch
 
 def refreshCookie():
 	global cookieJar
@@ -192,36 +208,39 @@ def googleHackGhdb(host):
 		google(host, res)
 		i += 1
 	pass
-	
-def usage():
-	print 'ghack.py [op] host'
-	print '\t-l\t\tseach local GHDB only'
-	print '\t-g <host>\tredirect google'
-	print '\t-p <proxy>\tindicate proxy. example http@localhost:8080'	
-	print '\t-h\t\thelp message'
-	print '\n\texample:\n\t\tghack.py www.example.com'
 
-localOnly = False
-opts, args = getopt.getopt(sys.argv[1:], "hlp:g:")
-opener = None
-cookieJar = None
-proxy = ""
-for op, value in opts:
-	if op == '-l':
-		localOnly = True
-	elif op == '-p':
-		proxy = value
-	elif op == '-g':
-		googleHome = value
-	elif op == '-h':
-		usage()
-		sys.exit(0)
-	if len(args) == 0:
-		usage()
-		sys.exit(0)
+#####################################################################
+
+if __name__ == "__main__":
+	#import pdb
+	#pdb.set_trace()
+	def usage():
+		print 'ghack.py [op] host'
+		print '\t-l\t\tseach local GHDB only'
+		print '\t-g <host>\tredirect google'
+		print '\t-p <proxy>\tindicate proxy. example http@localhost:8080'	
+		print '\t-h\t\thelp message'
+		print '\n\texample:\n\t\tghack.py www.example.com'
+
+	localOnly = False
+	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:")
+	cookieJar = None
+	proxy = ""
+	for op, value in opts:
+		if op == '-l':
+			localOnly = True
+		elif op == '-p':
+			proxy = value
+		elif op == '-g':
+			googleHome = value
+		elif op == '-h':
+			usage()
+			sys.exit(0)
+		if len(args) == 0:
+			usage()
+			sys.exit(0)
 
 	try:
-		
 		#获取Cookiejar对象（存在本机的cookie消息）
 		cookieJar = cookielib.CookieJar()
 		#自定义opener,并将opener跟CookieJar对象绑定
@@ -244,18 +263,17 @@ for op, value in opts:
 		"""
 		#安装opener,此后调用urlopen()时都会使用安装过的opener对象
 		urllib2.install_opener(opener)			
-		requestUrl(googleHome)
-		time.sleep(3)
-				
+		#requestUrl(googleHome)
+		#time.sleep(3)
 	except Exception,e:
 		print 'Initializing failed'
 		print e
 		raise
 		sys.exit(-1)
 		
-# user_agent = user_agents[random.randint(0, len(user_agents) - 1)]
-googleHackLocal(args[0])
-if not localOnly:
-	googleHackGhdb(args[0])		
+	# user_agent = user_agents[random.randint(0, len(user_agents) - 1)]
+	googleHackLocal(args[0])
+	if not localOnly:
+		googleHackGhdb(args[0])		
 
-print 'Done!'
+	print 'Done!'

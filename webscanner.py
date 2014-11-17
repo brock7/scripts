@@ -33,6 +33,8 @@ scanDepth = 3
 notFoundInfo = 'Not Found'
 saveCookie = False
 cookie = ''
+searchPage = 10
+googleWhat = ''
 
 user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -124,7 +126,7 @@ class Scanner:
 			else:
 				return None
 		except Exception,e:
-			print 'Exception: ' + repr(e)
+			print 'Exception: ' + repr(e) + 'at :' + request.get_full_url()
 			return None
 		except:
 			return None
@@ -252,6 +254,28 @@ class CrawlerScanner(Scanner):
 		yield self._hostRoot
 		for url in self.scanPage(self._hostRoot, 0):
 			yield url	
+
+import ghack
+class GoogleScanner(Scanner):
+	def __init__(self, hostRoot, testers = (SimpleTester(), ) ):
+		self._hostRoot = hostRoot
+		self._testers = testers
+	
+	def getUrls(self):
+		if ghack.opener == None:
+			ghack.opener = self._opener
+			# global verbose
+			ghack.verbose = verbose
+			ghack.waitForPerReq = scanWait
+
+		urls = set()
+		ghack.google(self._hostRoot, googleWhat, searchPage, 
+			lambda url: urls.add(url))
+			# print len(self._urls)
+		for url in urls:
+			if verbose:
+				print '=>' + url
+			yield url
 
 #####################################################################
 # vulnerability testers
@@ -412,6 +436,9 @@ class HiddenFileTester(Tester):
 		urlP = urlparse.urlparse(url)
 		# pathItems = urlP.path.split('/')
 		#pathItems = os.path.split(urlP.path)
+		if len(urlP.fragment) > 0:
+			url = url[:url.find('#')]
+
 		if len(urlP.query) <= 0:
 			file = url
 		else:
@@ -439,14 +466,15 @@ if __name__ == "__main__":
 		-h show help message
 		-k <cookie>	set cookie
 		-n <keyword> filter out the keyword
-		-p <scanType> 0 list 1 crawler. default 0
+		-p <searchPage>  default 5
 		-s save cookie
+		-t <scanType> 0 list, 1 crawler, 2 google. default 0
 		-v verbose
 		-w wait time."""	
 		print helpMsg 
 		sys.exit(0)
 	
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:psvw:")
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:st:vw:")
 	#print opts
 	#print args
 	for op, value in opts:
@@ -458,6 +486,8 @@ if __name__ == "__main__":
 			results.append(value)	
 		elif op == "-f":
 			config = value
+		elif op == '-g':
+			googleWhat = value
 		elif op == "-h":
 			usage()
 		elif op == '-k':
@@ -465,9 +495,13 @@ if __name__ == "__main__":
 		elif op == '-n':
 			notFoundInfo = value.decode(locale.getpreferredencoding())
 		elif op == '-p':
-			scanType = 1
+			searchPage = int(value)
 		elif op == '-s':
 			saveCookie = True
+		elif op == '-t':
+			scanType = int(value)
+			if scanType == 2:
+				saveCookie = True
 		elif op == '-v':
 			verbose = True
 		elif op == "-w":		
@@ -478,16 +512,19 @@ if __name__ == "__main__":
 	if config[-1] != '/':
 		config += '/'
 	
-	if not re.search(r'^http://', urlRoot):
-		urlRoot = 'http://' + urlRoot
-	
 	if scanType == 0:
+		if not re.search(r'^http://', urlRoot):
+			urlRoot = 'http://' + urlRoot
 		ls = os.listdir(config)
 		for path in ls:
 			if re.search('\.txt$', path):
 				print 'List scanning: [', urlRoot, config + path, ']'
 				scanner = ListScanner(urlRoot, config + path)
-				scanner.scan()
 	elif scanType == 1:
+		if not re.search(r'^http://', urlRoot):
+			urlRoot = 'http://' + urlRoot
 		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
-		scanner.scan()
+	elif scanType == 2:
+		scanner = GoogleScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
+	scanner.scan()
+
