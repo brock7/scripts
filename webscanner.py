@@ -60,6 +60,7 @@ results = [
 	"Microsoft OLE DB Provider", 
 	"You have an error in your SQL syntax", 
 	r'ERROR [0-9]+?:', 
+	"Forbidden", 
 ];
 
 class SimpleTester(Tester):
@@ -70,10 +71,13 @@ class SimpleTester(Tester):
 		if response == None:
 			return
 		try:
-			if response.geturl() != url and response.geturl() != url + '/':
-				#print response.geturl(), url
-				return
-			respText = response.read()
+			if type(response) == types.StringType:
+				respText = response
+			else:
+				if response.geturl() != url and response.geturl() != url + '/':
+					#print response.geturl(), url
+					return
+				respText = response.read()
 			#print respText
 			if respText[:3] == codecs.BOM_UTF8:
 				respText = respText[3:]
