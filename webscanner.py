@@ -206,6 +206,9 @@ class CrawlerScanner(Scanner):
 		self._testers = testers
 
 	def adjustUrl(self, refer, url):
+		if re.search(r'^\/\/', url):
+			url = 'http:' + url
+
 		urlP = urlparse.urlparse(url)
 		#print 'protocol:',urlP.scheme
 		#print 'hostname:',urlP.hostname
