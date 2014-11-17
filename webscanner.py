@@ -482,6 +482,8 @@ if __name__ == "__main__":
 		print helpMsg 
 		sys.exit(0)
 	
+	reload(sys)
+	sys.setdefaultencoding(locale.getpreferredencoding())
 	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:N:st:vw:")
 	#print opts
 	#print args
