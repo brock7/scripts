@@ -110,6 +110,7 @@ class Scanner:
 	_opener = None	
 	_testers = ()
 	_progress = False
+	_user_agent = 'Firefox'
 	def __init__(self):
 		pass
 	
@@ -124,9 +125,7 @@ class Scanner:
 		log('=' * 60)
 
 	def sendReq(self, request, data = None, timeout = 15):
-		index = random.randint(0, len(user_agents) - 1)
-		user_agent = user_agents[index]
-		request.add_header('User-agent', user_agent)
+		request.add_header('User-agent', self._user_agent)
 		if len(cookie) > 0:
 			request.add_header('Cookie', cookie)
 
@@ -170,18 +169,20 @@ class Scanner:
 		# print '=' * 60
 		if saveCookie:
 			cookieJar = cookielib.CookieJar()
-			"""
-			ck = cookielib.Cookie(version=0, name='Name', value='1', port=None, 
-					port_specified=False, domain='www.example.com', domain_specified=False, 
-					domain_initial_dot=False, path='/', path_specified=True, secure=False, 
-					expires=None, discard=True, comment=None, comment_url=None, 
-					rest={'HttpOnly': None}, rfc2109=False)
-			cj.set_cookie(ck)
-			"""
+			#"""
+			#ck = cookielib.Cookie(version=0, name='Name', value='1', port=None, 
+			#		port_specified=False, domain='www.example.com', domain_specified=False, 
+			#		domain_initial_dot=False, path='/', path_specified=True, secure=False, 
+			#		expires=None, discard=True, comment=None, comment_url=None, 
+			#		rest={'HttpOnly': None}, rfc2109=False)
+			#cj.set_cookie(ck)
+			#"""
 			self._opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
 		else:
 			self._opener = urllib2.build_opener()
-		
+		index = random.randint(0, len(user_agents) - 1)
+		self._user_agent = user_agents[index]
+
 		urls = self.getUrls()
 		
 		for url in urls:
