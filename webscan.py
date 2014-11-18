@@ -60,7 +60,7 @@ def log(str):
 
 class Tester:
 	def scan(self, url, scaner):
-		pass
+		return False
 
 results = [
 	"<b>Fatal error</b>:", 
@@ -73,18 +73,18 @@ results = [
 
 class SimpleTester(Tester):
 	def scan(self, url, scanner):
-		# print url
+		# print 'SimpleTester.scan:', url
 		req = urllib2.Request(url)
 		response = scanner.sendReq(req)
 		if response == None:
-			return
+			return False
 		try:
 			if type(response) == types.StringType:
 				respText = response
 			else:
 				if response.geturl() != url and response.geturl() != url + '/':
-					#print response.geturl(), url
-					return
+					# print "REDIRECTED: ", response.geturl(), url
+					return False
 				respText = response.read()
 			#print respText
 			if respText[:3] == codecs.BOM_UTF8:
@@ -96,28 +96,33 @@ class SimpleTester(Tester):
 
 			if checkAll:
 				scanner.report(url, respText[:512])
-				return
+				return True
 
 			for p in results:
 				if re.search(p , respText):
 					scanner.report(url, respText[:512])
+					return True
 		except:
 			pass
+		return False
 
 class Scanner:
 	_opener = None	
 	_testers = ()
-	
+	_progress = False
 	def __init__(self):
 		pass
 	
 	def report(self, url, msg):
+		if self._progress:
+			sys.stdout.write('\n')
+			self._progress = False
 		log('=' * 60)
 		log('[URL] ' + url)
 		log('[MESSAGE]')
 		log(msg)
 		log('=' * 60)
-		
+
 	def sendReq(self, request, data = None, timeout = 15):
 		index = random.randint(0, len(user_agents) - 1)
 		user_agent = user_agents[index]
@@ -150,8 +155,15 @@ class Scanner:
 		return ()
 
 	def scanUrl(self, url):
+		if verbose:
+			log("=>" + url)
+		reported = False
 		for tester in self._testers:
-			tester.scan(url, self)
+			if tester.scan(url, self):
+				reported = True
+		if not verbose and  not reported:
+			sys.stdout.write('.')
+			self._progress = True
 
 	def scan(self):
 		#pdb.set_trace()
@@ -187,10 +199,8 @@ class ListScanner(Scanner):
 		for uri in open(self._fileName).readlines():
 			uri = uri.strip()
 			if uri[0] != '/':
-					uri = '/' + uri
+				uri = '/' + uri
 			url = self._hostRoot + uri
-			if verbose:
-				log("=>" + url)
 			yield url
 
 class CrawlerScanner(Scanner):
@@ -255,8 +265,6 @@ class CrawlerScanner(Scanner):
 				if not link in self._linkList and not link in linkRec:
 					if link.find(self._range) != -1:
 						linkRec.add(link)
-						if verbose:
-							log('=>' + link)
 						yield link
 			self._linkList = self._linkList.union(linkRec)
 			for link in linkRec:				
@@ -265,8 +273,6 @@ class CrawlerScanner(Scanner):
 
 	def getUrls(self):
 		self._linkList.add(self._hostRoot)
-		if verbose:
-			log('=>' + self._hostRoot)
 		yield self._hostRoot
 		for url in self.scanPage(self._hostRoot, 0):
 			yield url	
@@ -289,8 +295,6 @@ class GoogleScanner(Scanner):
 			lambda url: urls.add(url))
 			# print len(self._urls)
 		for url in urls:
-			if verbose:
-				log('=>' + url)
 			yield url
 
 #####################################################################
@@ -311,11 +315,11 @@ class PhpArrayExposePathTester(Tester):
 				req = urllib2.Request(url)
 				response = scanner.sendReq(req)
 				if response == None:
-					return
+					return False
 				try:
 					respText = response.read()
 				except:
-					return
+					return False
 				try:
 					if respText[:3] == codecs.BOM_UTF8:
 						respText = respText[3:]
@@ -325,10 +329,12 @@ class PhpArrayExposePathTester(Tester):
 				
 				if checkAll:
 					scanner.report(url, respText[:512])
-					return
+					return True
 
 				if re.search('Fatal error', respText):
 					scanner.report(url, respText[:512])
+					return True
+		return False
 
 class SqlInjectionTester(Tester):
 	def scan(self, url, scaner):
@@ -360,11 +366,12 @@ class HiddenFileTester(Tester):
 		return True
 
 	def scanUrl(self, url):
-		#print url
+		if verbose:
+			log('  ->' + url)
 		req = urllib2.Request(url)
 		response = scanner.sendReq(req)
 		if response == None:
-			return
+			return False
 		# print type(response)
 		if type(response) == types.StringType:
 			respText = response
@@ -373,10 +380,10 @@ class HiddenFileTester(Tester):
 				if response.geturl() != url and response.geturl() != url + '/':
 					# jumped, ignore?
 					#print response.geturl(), url
-					return
+					return False
 				respText = response.read()
 			except:
-				return			
+				return False			
 		try:
 			if respText[:3] == codecs.BOM_UTF8:
 				respText = respText[3:]
@@ -384,11 +391,14 @@ class HiddenFileTester(Tester):
 		except Exception, e:
 			pass
 		if self.isBinFileType(url) and self.isPrintableText(respText[:32]):
-			return
+			return False
 
 		if not re.search(notFoundInfo, respText):
 			scanner.report(url, respText[:512])
-	
+			return True
+
+		return False
+
 	_dirs = ('.svn/entries', '.git/config', 
 			'backup.zip', 'backup.rar', 'backup.tar.gz', 'backup.tar.bz2', 
 			'backup.tgz', 'backup.tbz', 'backup.tar', 'backup.7z')
@@ -561,6 +571,8 @@ if __name__ == "__main__":
 		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
 		scanner.scan()
 	elif scanType == 2:
+		urlP= urlparse.urlparse(urlRoot)
+		urlRoot = urlP.hostname
 		scanner = GoogleScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
 		scanner.scan()
 
