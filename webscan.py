@@ -554,9 +554,10 @@ if __name__ == "__main__":
 
 	urlRoot = args[0]
 
+	if not re.search(r'^http://', urlRoot):
+		urlRoot = 'http://' + urlRoot
+
 	if scanType == 0:
-		if not re.search(r'^http://', urlRoot):
-			urlRoot = 'http://' + urlRoot
 		if os.path.isdir(config):
 			if config[-1] != '/':
 				config += '/'
@@ -571,8 +572,6 @@ if __name__ == "__main__":
 			scanner.scan()
 
 	elif scanType == 1:
-		if not re.search(r'^http://', urlRoot):
-			urlRoot = 'http://' + urlRoot
 		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
 		scanner.scan()
 	elif scanType == 2:
