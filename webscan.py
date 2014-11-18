@@ -143,7 +143,7 @@ class Scanner:
 				return None
 		except Exception,e:
 			if verbose:
-				log('Exception: ' + repr(e) + 'at :' + request.get_full_url())
+				log('Exception: ' + repr(e) + ' at :' + request.get_full_url())
 			return None
 		except:
 			return None
@@ -198,7 +198,7 @@ class ListScanner(Scanner):
 		
 	def getUrls(self):
 		for uri in open(self._fileName).readlines():
-			uri = uri.strip()
+			uri = urllib2.quote(uri.strip())
 			if uri[0] != '/':
 				uri = '/' + uri
 			url = self._hostRoot + uri
@@ -553,19 +553,23 @@ if __name__ == "__main__":
 		sys.exit(-1)
 
 	urlRoot = args[0]
-	
-	if config[-1] != '/':
-		config += '/'
-	
+
 	if scanType == 0:
 		if not re.search(r'^http://', urlRoot):
 			urlRoot = 'http://' + urlRoot
-		ls = os.listdir(config)
-		for path in ls:
-			if re.search('\.txt$', path):
-				log('List scanning: [' + urlRoot + " " + config + path + ']')
-				scanner = ListScanner(urlRoot, config + path)
-				scanner.scan()
+		if os.path.isdir(config):
+			if config[-1] != '/':
+				config += '/'
+			ls = os.listdir(config)
+			for path in ls:
+				if re.search('\.txt$', path):
+					log('List scanning: [' + urlRoot + " " + config + path + ']')
+					scanner = ListScanner(urlRoot, config + path)
+					scanner.scan()
+		else:
+			scanner = ListScanner(urlRoot, config)
+			scanner.scan()
+
 	elif scanType == 1:
 		if not re.search(r'^http://', urlRoot):
 			urlRoot = 'http://' + urlRoot
