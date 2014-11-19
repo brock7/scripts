@@ -30,7 +30,7 @@ searchPage = 1
 hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip', 
 	'ext:conf', 'ext:rar', 'ext:sh', 'ext:gz', 'ext:bz2', 'ext:tar', 'ext:tgz', 
 	'ext:mdb', 'ext:ini', 'ext:7z', 'ext:cgi', "#", 
-	'inurl:filename', 'inurl:upload', 'inurl:profile 管理员', 
+	'inurl:filename', 'inurl:upload', 'inurl:profile 管理员', 'inurl:cgi-bin', 
 	'inurl:file', 'inurl:down', 'inurl:passwd', 'inurl:path', "#", 
 	'intitle:"index.of"', 'intitle:管理 ', "#",
 	'intext:*@*.com', 'intext:*@*.net', 'intext:*@*.cn', 'intext:ftp://*:* ',  

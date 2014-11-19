@@ -2,7 +2,7 @@ import smtplib
 
 SERVER = "localhost"
 
-FROM = "1778899@qq.com"
+FROM = "8274634@qq.com"
 TO = ["58502944@qq.com"] # must be a list
 
 SUBJECT = "Hello!"
