@@ -42,7 +42,12 @@ except socket.herror,e:
 whois
 
 # firebug 可以生成xpath表达式
-curl 'http://whois.aizhan.com/index.php?r=site/searchDomain&s=www.cankaoxiaoxi.com&ajax=yes&update=false&field=base' # //xpath: //*[@id="whoisContentHead"]
 
+
+curl 'http://whois.aizhan.com/index.php?r=site/searchDomain&s=www.cankaoxiaoxi.com&ajax=yes&update=false&field=base' # //xpath: //*[@id="whoisContentHead"]
 curl 'http://whois.aizhan.com/index.php?r=site/searchDomain&s=www.cankaoxiaoxi.com&ajax=yes&update=false&field=details' # //xpath: //*[@id="whoisContentDetails"]
 
+
+http://whois.www.net.cn/whois/domain/cankaoxiaoxi.com # 先在这页取cookie
+http://whois.www.net.cn/whois/api_whois?host=cankaoxiaoxi.com&_=1416719143236 # 返回json
+http://whois.www.net.cn/whois/api_whois_full?host=cankaoxiaoxi.com&web_server=whois.paycenter.com.cn&_=1416719145225
