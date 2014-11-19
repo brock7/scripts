@@ -1,6 +1,6 @@
 #!/bin/sh
 # bashshock.sh -w ext:cgi vancl.com
-ghack.py $@ | awk '{
+./ghack.py $@ | awk '{
 	if (length($0) > 2 && substr($0, 1, 1) != "*") {
 		count += 1;
 		sub(/\x0d/, "", $0)
