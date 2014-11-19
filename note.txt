@@ -15,3 +15,34 @@ curl 'http://dns.aizhan.com/index.php?r=index/domains&ip=183.60.196.169&page=2
 子域名查询
 curl -s --data 'domain=xiuren.com' http://i.links.cn/subdomain/|grep nofollow
 xpath: '//a[@rel='nofollow']/@href'
+
+
+1.查询DNS
+
+import sys,socket
+result=socket.getaddrinfo(sys,argv[1],None)
+print result[0][4]
+
+>>> r = socket.gethostbyname_ex('www.baidu.com') #r = (hostname, aliaslist, ipaddrlist)
+>>> print r
+('www.a.shifen.com', ['www.baidu.com'], ['115.239.210.27', '115.239.211.110'])
+>>> socket.gethostbyname_ex('www.newsmth.net')
+('ks12.newsmth.net', ['www.newsmth.net', 'www.k.newsmth.net'], ['42.62.43.22'])
+
+2 反向查询：
+
+import sys,socket
+try:
+	result=socket.gethostbyaddr(sys.argv[1])
+	print "hostname is "+result[0]
+except socket.herror,e:
+	print "can't look up"
+
+
+whois
+
+# firebug 可以生成xpath表达式
+curl 'http://whois.aizhan.com/index.php?r=site/searchDomain&s=www.cankaoxiaoxi.com&ajax=yes&update=false&field=base' # //xpath: //*[@id="whoisContentHead"]
+
+curl 'http://whois.aizhan.com/index.php?r=site/searchDomain&s=www.cankaoxiaoxi.com&ajax=yes&update=false&field=details' # //xpath: //*[@id="whoisContentDetails"]
+
