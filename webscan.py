@@ -199,6 +199,8 @@ class ListScanner(Scanner):
 	def getUrls(self):
 		for uri in open(self._fileName).readlines():
 			uri = urllib2.quote(uri.strip())
+			if len(uri) <= 0:
+				continue
 			if uri[0] != '/':
 				uri = '/' + uri
 			url = self._hostRoot + uri
@@ -558,6 +560,7 @@ if __name__ == "__main__":
 		urlRoot = 'http://' + urlRoot
 
 	if scanType == 0:
+		checkAll = True
 		if os.path.isdir(config):
 			if config[-1] != '/':
 				config += '/'
