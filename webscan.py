@@ -99,7 +99,7 @@ class SimpleTester(Tester):
 				return True
 
 			for p in results:
-				if re.search(p , respText):
+				if re.search(p , respText, re.IGNORECASE):
 					scanner.report(url, respText[:512])
 					return True
 		except:
@@ -310,7 +310,7 @@ Fatal error: Unsupported operand types in /home/wwwroot/drvsky/require/guestfunc
 class PhpArrayExposePathTester(Tester):
 	def scan(self, url, scaner):
 		urlP = urlparse.urlparse(url)
-		if re.search(r'\.php$', urlP.path):
+		if re.search(r'\.php$', urlP.path, re.IGNORECASE):
 			if url.find('=') != -1:
 				url = url.replace('=', '[]=')
 				#print url
@@ -396,7 +396,7 @@ class HiddenFileTester(Tester):
 		if self.isBinFileType(url) and self.isPrintableText(respText[:32]):
 			return False
 
-		if not re.search(notFoundInfo, respText):
+		if not re.search(notFoundInfo, respText, re.IGNORECASE):
 			scanner.report(url, respText[:512])
 			return True
 
@@ -560,7 +560,7 @@ if __name__ == "__main__":
 
 	urlRoot = args[0]
 
-	if not re.search(r'^http://', urlRoot):
+	if not re.search(r'^http://', urlRoot, re.IGNORECASE):
 		urlRoot = 'http://' + urlRoot
 
 	if scanType == 0:
@@ -570,7 +570,7 @@ if __name__ == "__main__":
 				config += '/'
 			ls = os.listdir(config)
 			for path in ls:
-				if re.search('\.txt$', path):
+				if re.search('\.txt$', path, re.IGNORECASE):
 					log('List scanning: [' + urlRoot + " " + config + path + ']')
 					scanner = ListScanner(urlRoot, config + path)
 					scanner.scan()
