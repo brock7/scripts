@@ -61,8 +61,8 @@ def url_filter(url, host):
 		return False
 	if url.find('http://webcache.googleusercontent') != -1:
 		return False
-	if url.find('http://support.google') != -1:
-		return False
+	#if url.find('http://support.google') != -1:
+	#	return False
 	if url.find('http:') == -1 and url.find('ftp:') == -1:
 		return False
 	if url.find('youtube') != -1:
@@ -251,9 +251,9 @@ if __name__ == "__main__":
 			verbose = True
 		elif op == '-w':
 			what = value
-		if len(args) == 0:
-			usage()
-			sys.exit(0)
+	if len(args) == 0:
+		usage()
+		sys.exit(0)
 
 	try:
 		#获取Cookiejar对象（存在本机的cookie消息）

@@ -1,3 +1,4 @@
 1 加入多进程扫描
 2 优化扫描过程
 3 加入 robot.txt, sitemap.xml 扫描
+3 googleSearch page not implementation

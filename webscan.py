@@ -554,6 +554,10 @@ if __name__ == "__main__":
 		print 'cannot open: ' + outfile
 		sys.exit(-1)
 
+	if len(args) <= 0:
+		usage()
+		sys.exit(0)
+
 	urlRoot = args[0]
 
 	if not re.search(r'^http://', urlRoot):
