@@ -18,7 +18,8 @@ from lxml import etree
 import time
 import locale
 
-googleHome = 'http://www.google.com.hk/'
+#googleHome = 'http://www.google.com.hk/'
+googleHome = 'http://64.233.161.104/'
 gfsosoHome = 'http://www.gfsoso.com/'
 reqTimeout = 15
 opener = None
@@ -60,6 +61,8 @@ def url_filter(url, host):
 		return False
 	if url.find('http://webcache.googleusercontent') != -1:
 		return False
+	if url.find('http://support.google') != -1:
+		return False
 	if url.find('http:') == -1 and url.find('ftp:') == -1:
 		return False
 	if url.find('youtube') != -1:
@@ -93,8 +96,9 @@ def googleSearch(host, what, page = 1, report = defaultReport):
 	html = response.read()
 	#print html
 	tree = etree.HTML(html)
-	nodes = tree.xpath(r"/a//@href")
-	#print "node count: ", len(nodes), " html len: ", len(html)
+	#nodes = tree.xpath(r"//a/@href")
+	nodes = tree.xpath(r'//a/@href')
+	print "node count: ", len(nodes), " html len: ", len(html)
 	#nodes = re.findall(r' href=["\'](.*?)["\']', html)
 	for node in nodes:
 		#print node
@@ -104,7 +108,7 @@ def googleSearch(host, what, page = 1, report = defaultReport):
 		else:
 			url = m.group(1)
 		#print node, host, url
-		if not url_filter(node, host):
+		if not url_filter(url, host):
 			continue
 		report(url)
 	return
@@ -225,7 +229,7 @@ if __name__ == "__main__":
 		print '\n\texample:\n\t\tghack.py www.example.com'
 
 	localOnly = False
-	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:P:w:")
+	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:GP:vw:")
 	cookieJar = None
 	proxy = ""
 	what = ""
@@ -236,11 +240,15 @@ if __name__ == "__main__":
 			proxy = value
 		elif op == '-g':
 			googleHome = value
+		elif op == '-G':
+			google = googleSearch
 		elif op == '-h':
 			usage()
 			sys.exit(0)
 		elif op == '-P':
 			searchPage = int(value)
+		elif op == '-v':
+			verbose = True
 		elif op == '-w':
 			what = value
 		if len(args) == 0:
