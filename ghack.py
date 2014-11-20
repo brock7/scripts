@@ -23,6 +23,7 @@ reqTimeout = 15
 opener = None
 verbose = True
 waitForPerReq = 0.0
+searchPage = 1
 
 hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip', 
 	'ext:conf', 'ext:rar', 'ext:sh', 'ext:gz', 'ext:bz2', 'ext:tar', 'ext:tgz', 
@@ -223,7 +224,7 @@ if __name__ == "__main__":
 		print '\n\texample:\n\t\tghack.py www.example.com'
 
 	localOnly = False
-	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:w:")
+	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:P:w:")
 	cookieJar = None
 	proxy = ""
 	what = ""
@@ -237,6 +238,8 @@ if __name__ == "__main__":
 		elif op == '-h':
 			usage()
 			sys.exit(0)
+		elif op == '-P':
+			searchPage = int(value)
 		elif op == '-w':
 			what = value
 		if len(args) == 0:
@@ -276,7 +279,7 @@ if __name__ == "__main__":
 		
 	# user_agent = user_agents[random.randint(0, len(user_agents) - 1)]
 	if len(what) > 0:
-		google(args[0], what)
+		google(args[0], what, page = searchPage)
 		sys.exit(0)
 	googleHackLocal(args[0])
 	if not localOnly:
