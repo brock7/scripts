@@ -41,6 +41,7 @@ def _refreshCookie(opener, what):
 	except Exception, e:
 		html = ''
 		if e.code == 301: # moved
+			# html = reduce(lambda x,y: x + y, e.readlines())
 			for line in e.readlines():
 				html += line
 		else:
