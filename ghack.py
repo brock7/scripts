@@ -223,9 +223,10 @@ if __name__ == "__main__":
 		print '\n\texample:\n\t\tghack.py www.example.com'
 
 	localOnly = False
-	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:")
+	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:w:")
 	cookieJar = None
 	proxy = ""
+	what = ""
 	for op, value in opts:
 		if op == '-l':
 			localOnly = True
@@ -236,6 +237,8 @@ if __name__ == "__main__":
 		elif op == '-h':
 			usage()
 			sys.exit(0)
+		elif op == '-w':
+			what = value
 		if len(args) == 0:
 			usage()
 			sys.exit(0)
@@ -272,6 +275,9 @@ if __name__ == "__main__":
 		sys.exit(-1)
 		
 	# user_agent = user_agents[random.randint(0, len(user_agents) - 1)]
+	if len(what) > 0:
+		google(args[0], what)
+		sys.exit(0)
 	googleHackLocal(args[0])
 	if not localOnly:
 		googleHackGhdb(args[0])		
