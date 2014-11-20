@@ -41,6 +41,8 @@ hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip',
 	)
 
 def googleHackLocal(host):
+	#import pdb
+	#pdb.set_trace()
 	#print('******* google hack: ' + host)
 	count = 0
 	for hack in hacks:

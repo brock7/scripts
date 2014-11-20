@@ -39,8 +39,14 @@ def _refreshCookie(opener, what):
 		response = opener.open(req, timeout = REQ_TIMEOUT)
 		html = response.read()
 	except Exception, e:
-		print "Exception: url: %s - " % url, e
-		return
+		html = ''
+		if e.code == 301: # moved
+			for line in e.readlines():
+				html += line
+		else:
+			print "Exception: url: %s - " % url, e
+			return
+
 	m = re.search(r"_GFTOKEN','([0-9a-f]+)'", html)
 	
 	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_pages', '1'))
@@ -60,7 +66,7 @@ def _urlFilter(url):
 		return False
 	return True
 
-pattern = re.compile(r'<span>约有([0-9]+)项结果')
+pattern = re.compile(r'<span>约有([0-9,]+)项结果')
 pattern2 = re.compile(r'抱歉，没有找到与“.*?”相关的网页')
 
 def _updateTotalRecord(html):
@@ -75,8 +81,8 @@ def _updateTotalRecord(html):
 		return
 	if len(m.groups()) <= 0:
 		return
-	totalRecord = int(m.group(1))
-	#print 'totalRecord', totalRecord
+	totalRecord = int(m.group(1).replace(',', ''))
+	print 'Total: ', totalRecord
 
 def _gfsosoPageHandler(opener, url):
 	req = urllib2.Request(url)
@@ -94,6 +100,7 @@ def _gfsosoPageHandler(opener, url):
 		_updateTotalRecord(html)
 
 	nodes = re.findall(r' href=\\["\'](.*?)\\["\']', html)
+	#print nodes
 	for node in nodes:
 		m = re.search('/url\?q=([^&]+)', node)
 		if m == None:
@@ -129,6 +136,9 @@ def _makeCookie(name, value):
 
 def _gfsosoSearch(opener, what, resultNum = -1, startNum = 0):
 	
+	#import pdb
+	#pdb.set_trace()
+
 	what = urllib2.quote(what)
 	if resultNum == -1:
 		pageCount = -1
@@ -141,6 +151,8 @@ def _gfsosoSearch(opener, what, resultNum = -1, startNum = 0):
 		_refreshCookie(opener, what)
 
 	global totalRecord
+	totalRecord = sys.maxint
+
 	pageNum = 1
 	resCnt = 0
 	while True:

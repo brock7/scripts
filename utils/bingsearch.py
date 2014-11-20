@@ -127,6 +127,8 @@ def _bingSearch(opener, what, resultNum = -1, startNum = 0):
 		_refreshCookie(opener, what)
 
 	global totalRecord
+	totalRecord = sys.maxint
+
 	pageNum = 1
 	resCnt = 0
 	while True:

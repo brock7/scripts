@@ -65,6 +65,8 @@ def _urlFilter(url):
 		return False
 	if url.find(GOOGLE_HOME) != -1:
 		return False
+	if url.find('www.blogger.com') != -1:
+		return False
 	return True
 
 pattern = re.compile(r'About ([0-9,]+) results<nobr>')
@@ -119,6 +121,8 @@ def _googleSearch(opener, what, resultNum = -1, startNum = 0):
 		_refreshCookie(opener, what)
 
 	global totalRecord
+	totalRecord = sys.maxint
+
 	pageNum = 1
 	resCnt = 0
 	while True:
