@@ -16,6 +16,7 @@ import os
 import random
 from lxml import etree
 import time
+import locale
 
 googleHome = 'http://www.google.com.hk/'
 gfsosoHome = 'http://www.gfsoso.com/'
@@ -76,7 +77,7 @@ def requestUrl(url):
 	return response
 
 def defaultReport(url):
-	print url
+	print url.decode('utf-8').encode(locale.getpreferredencoding())
 
 def googleSearch(host, what, page = 1, report = defaultReport):
 	global opener
