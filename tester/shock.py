@@ -93,9 +93,13 @@ def testBashShock3(url):
 	return False
 
 def scan(url, opener):
-	testBashShock1(url)
-	testBashShock2(url)
-	testBashShock3(url)
+	if testBashShock1(url):
+		return True
+	if testBashShock2(url):
+		return True
+	if testBashShock3(url):
+		return True
+	return False
 
 if __name__ == '__main__':
 	opts, args = getopt.getopt(sys.argv[1:], "n:b:w:u:")
