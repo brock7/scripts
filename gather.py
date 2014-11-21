@@ -164,17 +164,26 @@ def baseInfo(url):
 	except:
 		pass
 
+	req = urllib2.Request(url)
+	req.add_header('Proxy-Connection', 'Keep-Alive')
+	req.add_header('Accept', '*/*')
+	req.add_header('User-Agent', ' Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0')
+	req.add_header('Command', 'stop-debug')
 	req.get_method = lambda: 'DEBUG'
 	try:
 		response = urllib2.urlopen(req, timeout = 15)
-		print '* Support Debug Method'
-		#print response.read()
+		if response.read().find(r'OK') != -1:
+			print '* Support Debug Method'
 	except Exception, e:
 		pass
 #		if hasattr(e, 'code'):
 #			if not (e.code == 501 or e.code == 405 or e.code == 403):
 #				print 'DEBUG: ', e
 
+	req = urllib2.Request(url)
+	req.add_header('Proxy-Connection', 'Keep-Alive')
+	req.add_header('Accept', '*/*')
+	req.add_header('User-Agent', ' Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0')
 	req.get_method = lambda: 'TRACE'
 	try:
 		response = urllib2.urlopen(req, timeout = 15)
@@ -247,7 +256,7 @@ if __name__ == '__main__':
 		queryWeight(urlP.hostname)
 	if options & 32:
 		print '\n============================== site file ==============================\n'
-		querySiteFile(url)
+		querySiteFile(url[:url.find('/', 8)])
 	if options & 8:
 		print '\n============================== nmap ==============================\n'
 		sys.stdout.flush()
