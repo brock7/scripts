@@ -102,6 +102,7 @@ def googleHackGhdb(host):
 			continue
 		#res = urllib.unquote_plus(res.group(1))
 		what = webutils.escapeHtml(res.group(1))
+		what = urllib.unquote_plus(what)
 		print '******* [google] [GHDB: %d] site:%s %s *******' % (i, host, what)
 		for url in google(opener, 'site:%s %s' % (host, what), resultCount):
 			print '    [#] ' + url.decode('utf-8')

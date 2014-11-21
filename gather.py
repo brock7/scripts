@@ -117,6 +117,16 @@ def queryWhois(domain):
 		for (k, v) in jdetail['module'].items():
 			print k if k[-1:] == ':' else k + ': ', toStr(v)
 
+def queryWeight(domain):
+	url = 'http://mytool.chinaz.com/baidusort.aspx?host=%s&sortType=0' % domain
+	response = urllib2.urlopen(url)
+	tree = etree.HTML(encoding(response.read()))
+	nodes = tree.xpath("/html/body/div/div[5]/div/div[1]/div/div/div/div/div[2]/div/div/div[1]/font[1]/text()")
+	if len(nodes) <= 0:
+		print 'No data'
+	else:
+		print 'Baidu Weight: ', nodes[0]
+	
 def nmap(domain):
 	os.system('nmap -sV %s' % domain)
 
@@ -153,6 +163,14 @@ def baseInfo(url):
 	except:
 		pass
 
+	req.get_method = lambda: 'TRACE'
+	try:
+		response = urllib2.urlopen(req, timeout = 15)
+	except Exception, e:
+		if hasattr(e, 'code'):
+			if not (e.code == 501 or e.code == 405 or e.code == 403):
+				print 'TRACE: ', e
+
 if __name__ == '__main__':
 	import locale	
 	reload(sys)
@@ -163,7 +181,7 @@ if __name__ == '__main__':
 	urllib2.install_opener(opener)
 	
 	options = 0
-	opts, args = getopt.getopt(sys.argv[1:], "Nrsw")
+	opts, args = getopt.getopt(sys.argv[1:], "Nrswb")
 	for op, vaule in opts:
 		if op == '-N':
 			noTitle = True
@@ -173,9 +191,11 @@ if __name__ == '__main__':
 			options |= 2
 		elif op == '-w':
 			options |= 4
+		elif op == '-b':
+			options |= 16
 
 	if options == 0:
-		options = 1 | 2 | 4 | 8
+		options = 1 | 2 | 4 | 8 | 16
 	url = args[0]
 	if url[:7] != 'http://' and url[:8] != 'https://':
 		url = 'http://' + url
@@ -193,6 +213,9 @@ if __name__ == '__main__':
 	if options & 4:
 		print '\n============================== whois ==============================\n'
 		queryWhois(urlP.hostname)
+	if options & 16:
+		print '\n============================== baidu weight ==============================\n'
+		queryWeight(urlP.hostname)
 	if options & 8:
 		print '\n============================== nmap ==============================\n'
 		sys.stdout.flush()
