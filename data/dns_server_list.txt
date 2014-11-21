@@ -1,4 +1,9 @@
-﻿<table cellspacing="0" id="tblSort" style="width:100%;" class="mytable">
+cat data/dns_server_list.txt | ./regx.py '<td class="province">(.*?)</td>' > aaa
+cat data/dns_server_list.txt | ./regx.py '<td class="isp">(.*?)</td>' > bbb   
+cat data/dns_server_list.txt | ./regx.py 'LOCAL DNS : (.*?)" data-placement=' > ccc
+paste aaa bbb ccc > data/dns_server.txt
+
+<table cellspacing="0" id="tblSort" style="width:100%;" class="mytable">
                 <thead>
                     <tr>
 						<th onclick="sortTable('tblSort', 0,'text')">省份<span class="default_arrow"></span></th>
@@ -376,4 +381,8 @@
                         </tr>
                         <tr style="display:none;" id="trinfo107" class="alt"></tr>
                                     </tbody>
+<<<<<<< HEAD
             </table>
+=======
+            </table>
+>>>>>>> 26d39b04d8bb4a41fcb88d491aa0a8091fbecb16
