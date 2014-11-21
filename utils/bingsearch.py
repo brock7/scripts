@@ -61,6 +61,8 @@ def _urlFilter(url):
 		return False
 	if url.find('bing.com') != -1:
 		return False
+	if url.find('.live.com') != -1:
+		return False
 	if url.find('google.com') != -1:
 		return False
 	if url.find('.googleusercontent.com') != -1:

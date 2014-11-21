@@ -9,7 +9,7 @@ import bingsearch
 #searchEngine = bingsearch.google
 
 if os.environ.has_key('search_engine'):
-	search_engine = os.environ['http_proxy']
+	search_engine = os.environ['search_engine']
 else:
 	search_engine = 'gfsoso'
 
@@ -20,9 +20,9 @@ elif search_engine == 'google':
 elif search_engine == 'aol':
  	google = aolsearch.google
 elif search_engine == 'bing':
- 	google = gingsearch.google
+ 	google = bingsearch.google
 else:
-	google = searchEngine
+	google = gfsoso.google
 
 searchEngine = google
 

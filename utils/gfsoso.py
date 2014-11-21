@@ -18,6 +18,7 @@ from lxml import etree
 import time
 import locale
 import webutils
+import googlesearch
 
 #GOOGLE_HOME = 'http://www.google.com.hk/'
 GOOGLE_HOME = 'http://64.233.161.104/'
@@ -27,18 +28,29 @@ NUM_PER_PAGE = 10
 reqDelay = 0.0
 #maxResult = 10
 totalRecord = sys.maxint
-
+RedirectedUrl = GFSOSO_HOME
 _cookieFetched = False
 
 def _refreshCookie(opener, what):
+
+	what = urllib2.quote(what)
 	url = GFSOSO_HOME + '?q=%s' % (what)
 	req = urllib2.Request(url)
 	webutils.setupRequest(req)
 	req.add_header('Referer', GFSOSO_HOME)
 	try:
 		response = opener.open(req, timeout = REQ_TIMEOUT)
+		# print response.geturl()
+		if response.geturl().find(GFSOSO_HOME) == -1:
+			global RedirectedUrl
+			RedirectedUrl = response.geturl()
+			RedirectedUrl = RedirectedUrl[0 : RedirectedUrl.find('/', 7) + 1]
+			# print 'Redirect', RedirectedUrl
+			return False
+
 		html = response.read()
 	except Exception, e:
+		print e
 		html = ''
 		if e.code == 301: # moved
 			# html = reduce(lambda x,y: x + y, e.readlines())
@@ -46,15 +58,20 @@ def _refreshCookie(opener, what):
 				html += line
 		else:
 			print "Exception: url: %s - " % url, e
-			return
+			return False
 
 	m = re.search(r"_GFTOKEN','([0-9a-f]+)'", html)
 	
+	# print m, m.group(1)
 	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_pages', '1'))
 	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_times', '1'))
-	webutils.cookieJar.set_cookie(_makeCookie('_GFTOKEN', m.group(1)))
+	if m:
+		webutils.cookieJar.set_cookie(_makeCookie('_GFTOKEN', m.group(1)))
+	else:
+		return False
 	global _cookieFetched
 	_cookieFetched = True
+	return True
 
 def _urlFilter(url):
 	if url.find('http:') == -1 and url.find('ftp:') == -1 and url.find('https:') == -1:
@@ -140,7 +157,6 @@ def _gfsosoSearch(opener, what, resultNum = -1, startNum = 0):
 	#import pdb
 	#pdb.set_trace()
 
-	what = urllib2.quote(what)
 	if resultNum == -1:
 		pageCount = -1
 	else:
@@ -149,10 +165,19 @@ def _gfsosoSearch(opener, what, resultNum = -1, startNum = 0):
 	startPage = int((startNum + NUM_PER_PAGE - 1) / NUM_PER_PAGE)
 
 	if not _cookieFetched:
-		_refreshCookie(opener, what)
+		if not _refreshCookie(opener, what):
+			print 'abcd'
+			#global _gfsosoPageHandler
+			googlesearch.GOOGLE_HOME = RedirectedUrl
+			#print RedirectedUrl
+			for url in googlesearch.google(opener, what, resultNum, startNum):
+				yield url
+			return
 
 	global totalRecord
 	totalRecord = sys.maxint
+
+	what = urllib2.quote(what)
 
 	pageNum = 1
 	resCnt = 0

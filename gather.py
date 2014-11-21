@@ -15,6 +15,7 @@ from lxml import etree
 import sys,socket
 import json
 import urlparse
+import re
 
 noTitle = False
 def encoding(data):
@@ -147,7 +148,7 @@ def baseInfo(url):
 	except:
 		pass
 
-		req.get_method = lambda: 'HEAD'
+	req.get_method = lambda: 'GET'
 	try:
 		response = urllib2.urlopen(req, timeout = 15)
 		#for k, v in response.info().items():
@@ -163,13 +164,39 @@ def baseInfo(url):
 	except:
 		pass
 
-	req.get_method = lambda: 'TRACE'
+	req.get_method = lambda: 'DEBUG'
 	try:
 		response = urllib2.urlopen(req, timeout = 15)
+		print '* Support Debug Method'
+		#print response.read()
 	except Exception, e:
 		if hasattr(e, 'code'):
 			if not (e.code == 501 or e.code == 405 or e.code == 403):
 				print 'TRACE: ', e
+
+	req.get_method = lambda: 'TRACE'
+	try:
+		response = urllib2.urlopen(req, timeout = 15)
+		print '* Support TRACE Header'
+	except Exception, e:
+		if hasattr(e, 'code'):
+			if not (e.code == 501 or e.code == 405 or e.code == 403):
+				print 'TRACE: ', e
+
+def querySiteFile(url):
+	files = ( ('robots.txt', 'Allow|Disallow'), ('crossdomain.xml', 'cross-domain-policy'), 
+		('phpinfo.php', 'PHP Version'), ('sitemap.xml', 'schemas\/sitemap'), )
+	for file in files:
+		try:
+			response = urllib2.urlopen(url + '/' + file[0], timeout = 15)
+			html = response.read()
+			if not re.search(file[1], html, re.IGNORECASE):
+				continue
+			print '[%s]' % file[0]
+			print html[:4096]
+		except:
+			#raise
+			pass
 
 if __name__ == '__main__':
 	import locale	
@@ -181,7 +208,7 @@ if __name__ == '__main__':
 	urllib2.install_opener(opener)
 	
 	options = 0
-	opts, args = getopt.getopt(sys.argv[1:], "Nrswb")
+	opts, args = getopt.getopt(sys.argv[1:], "fNrswb")
 	for op, vaule in opts:
 		if op == '-N':
 			noTitle = True
@@ -193,9 +220,11 @@ if __name__ == '__main__':
 			options |= 4
 		elif op == '-b':
 			options |= 16
+		elif op == '-f':
+			options |= 32
 
 	if options == 0:
-		options = 1 | 2 | 4 | 8 | 16
+		options = 1 | 2 | 4 | 8 | 16 | 32
 	url = args[0]
 	if url[:7] != 'http://' and url[:8] != 'https://':
 		url = 'http://' + url
@@ -216,6 +245,9 @@ if __name__ == '__main__':
 	if options & 16:
 		print '\n============================== baidu weight ==============================\n'
 		queryWeight(urlP.hostname)
+	if options & 32:
+		print '\n============================== site file ==============================\n'
+		querySiteFile(url)
 	if options & 8:
 		print '\n============================== nmap ==============================\n'
 		sys.stdout.flush()
