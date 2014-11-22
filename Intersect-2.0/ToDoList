@@ -1,0 +1,16 @@
+Intersect 2.0 To-Do List
+
+
+* Implement port-scanning after live-hosts are found
+* Rewrite software fingerprints and locatons for getProtection() feature
+* SNMP Scanner/Enum
+* Create traceroute graph for NetworkMap()
+* Fix the getGateway process. Right now, we assume you are using 192.168.1.0/24. New process will pull the gateway
+  from ifconfig using your local IP, drop the last octet and add .0/24 to grab your gateway.
+* Add process that dumps the plain-text from memory and sends to .txt file
+* Write custom client to interact with --bind listener
+* Optionally send NetworkMap() output to be imported within Metasploit DB
+
+
+
+If you have any ideas for this project or would like to help out, feel free to contact me

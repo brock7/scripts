@@ -1,0 +1,40 @@
+Intersect 2.0 | Changes Log
+
+
+02-05-2012
+Added: sysctl.conf copying, meminfo & cpuinfo gather, /var/log/ lists
+Contributor: ohdae
+
+02-06-2012
+Added: Function to clean username and IP address from 'w' 'who' 'last' and 'lastlog' commands.
+This will actively hide the users precense from other system users.
+Contributor: sk
+
+02-10-2012
+Fixed minor syntax error in the getCredentials() feature.
+Contributor: ohdae
+
+02-10-2012
+Added: Semi-interactive TCP bind shell. The shell binds to the server port 443 and accepts connects via netcat.
+You can read files, make/delete folders, add user accounts, view processes, netstat, etc.
+I am soon adding a new custom shell that will bind over SSL and you will have a wide variety of features, such as live sniffing
+and the capability of running Intersect commands over the shell and installing add-on modules.
+Contributor: ohdae 
+
+02-14-2012
+Madechanges to how Intersect searches for installed packages, log files and running services.
+Added option to identify different Linux distro's and perform some of the searches as being specific to that distro.
+Eventually I will incorporate the distro-specific searches into all the other areas. 
+Contributor: ohdae
+
+02-19-2012
+Added support for Local exploit checker. If a non-root user runs Intersect, the script will retrieve the current Linux kernel version
+and present the user with a list of local privilege escalation exploits for that kernel. The list includes the CVE number, download link
+and the name of the exploit.
+Added a few features to the TCP shell.
+Contributor: ohdae
+
+02-20-2012
+Added ability to search target system for all .SQL files and save their locations to a text file.
+Also searches for the location of all .ssh/ directories, their contents and all *history files (bash history, nano, sql, etc)
+Contributor: ohdae
