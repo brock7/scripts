@@ -13,7 +13,7 @@ curl 'http://dns.aizhan.com/index.php?r=index/domains&ip=183.60.196.169&page=2
 [u'www.chinanews.com.cn', u'www.cea.gov.cn', u'www.gwytb.gov.cn', u'www.catti.net.cn', u'i5.chinanews.com', u'mfm.moliyo.com', u'kazak.chinabroadcast.cn', u'arabic.cri.cn', u'english.cri.cn', u'indonesian.cri.cn', u'newsradio.cri.cn', u'sports.cri.cn', u'bengali.cri.cn', u'hindi.cri.cn', u'persian.cri.cn', u'home.china.com.cn', u'local.china.com.cn', u'attach.bbs.china.com.cn', u'app.chinadaily.com.cn', u'focus.china.com.cn']
 
 子域名查询
-curl -s --data 'domain=xiuren.com' http://i.links.cn/subdomain/|grep nofollow
+curl -s --data 'domain=xiuren.com&b2=1&b3=1&b4=1' http://i.links.cn/subdomain/|grep nofollow
 xpath: '//a[@rel='nofollow']/@href'
 
 

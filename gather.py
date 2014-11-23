@@ -1,3 +1,4 @@
+import sys, os
 import urllib2
 import cookielib
 from lxml import etree
@@ -11,7 +12,7 @@ response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois?host=cankaox
 print response.read()
 response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois_full?host=cankaoxiaoxi.com')
 print response.read()
-
+sys.exit(0)
 ################################################################
 
 from formatter import AbstractFormatter, NullWriter
