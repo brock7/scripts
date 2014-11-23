@@ -64,3 +64,50 @@ import os.path
 #            open(outfullname, "wt").write(text)
 #            print "Done!"
 #
+################################################################################
+"""
+
+#!/usr/bin/env python
+# encoding:utf8
+# author:zhouhh
+# date:2012.11.20
+from bs4 import BeautifulSoup
+import os
+import codecs
+f="shedia.txt"
+t=codecs.open(f,"wb",encoding="gb18030")
+#t.write("\nzhh made for my dear yff \n2012.11.18\n")
+ts=[]
+ 
+t.write("\nzhh made for my dear yff \n2012.11.18\n\n")
+for i in sorted(os.listdir(".")):
+    if(i[-3:]=="htm"):
+        print "convert %s title "%i
+        htm=codecs.open(i,"rb",encoding="gb18030")
+    soup=BeautifulSoup(htm)
+        htm.close()
+    #f="%stxt"%i[:-3]
+    #print "write to %s"%f
+        #t.write(soup.select("p")[0].text)
+    title=soup.title.text[7:]
+    ts.append(title)
+t.write("\n".join(ts))
+ 
+for i in sorted(os.listdir(".")):
+    if(i[-3:]=="htm"):
+        print "convert %s"%i
+        htm=codecs.open(i,"rb",encoding="gb18030")
+    soup=BeautifulSoup(htm)
+        htm.close()
+    #f="%stxt"%i[:-3]
+    #print "write to %s"%f
+        #t.write(soup.select("p")[0].text)
+    t.write("\nzhh made for my dear yff \n2012.11.18\n\n")
+    title=soup.title.text[7:]
+ 
+        t.write(title)
+    t.write(soup.select("pre")[0].text)
+    #t.write(soup.body.text)
+t.close()
+"""
+
