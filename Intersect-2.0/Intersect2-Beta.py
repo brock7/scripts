@@ -39,6 +39,8 @@ import struct
 import getpass
 import pwd
 
+conf = object()
+conf.verb = 1
 cut = lambda s: str(s).split("\0",1)[0]
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
