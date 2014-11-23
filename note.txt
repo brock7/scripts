@@ -51,3 +51,7 @@ curl 'http://whois.aizhan.com/index.php?r=site/searchDomain&s=www.cankaoxiaoxi.c
 http://whois.www.net.cn/whois/domain/cankaoxiaoxi.com # 先在这页取cookie
 http://whois.www.net.cn/whois/api_whois?host=cankaoxiaoxi.com&_=1416719143236 # 返回json
 http://whois.www.net.cn/whois/api_whois_full?host=cankaoxiaoxi.com&web_server=whois.paycenter.com.cn&_=1416719145225
+
+# 取title
+$curl -s --data "domain=cankaoxiaoxi.com&b2=1&b3=1&b4=1" "http://i.links.cn/subdomain/"|xpath.py "/html/head/title"
+cankaoxiaoxi.com下所有子域名列表-站长帮手网

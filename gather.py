@@ -3,6 +3,7 @@ import urllib2
 import cookielib
 from lxml import etree
 
+
 cookieJar = cookielib.CookieJar()
 opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
 urllib2.install_opener(opener)
