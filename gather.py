@@ -1,11 +1,19 @@
-import sys, os
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
+#
+# filename: gather.py
+# written by 老妖@wooyun
+# date: 2014-06-06
+#
+###############################################################################
+
+import sys, os, getopt, types
 import urllib2
 import cookielib
 from lxml import etree
 import sys,socket
 import json
-
-opener = None
 
 def getTitle(domain):
 	try:
@@ -57,32 +65,68 @@ def queryRDNS(domain):
 			print e
 			#pass
 
+def toStr(l):
+	#print type(l)
+	if type(l) != types.ListType:
+		return l
+	result = ''
+	for item in l:
+		if type(item) == types.ListType:
+			for v in itme:
+				result += '%s, ' % v
+		elif type(item) == types.DictType:
+			for (k, v) in item.items():
+				result += '%s: %s ' % (k, v)
+		else:
+			result += str(item) + ', '
+	return result
+
+
 def queryWhois(domain):
 	# fetch cookie
 	urllib2.urlopen('http://whois.www.net.cn/whois/domain/cankaoxiaoxi.com')
 	response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois?host=cankaoxiaoxi.com')
 	jbase = json.loads(response.read())
 	for (k, v) in jbase['module'].items():
-		print k, v
+		print k if k[-1:] == ':' else k + ': ', toStr(v) 
 	response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois_full?host=cankaoxiaoxi.com')
 	jdetail = json.loads(response.read())
 	for (k, v) in jdetail['module'].items():
-		print k + ':', v
+		print k if k[-1:] == ':' else k + ': ', toStr(v)
 
 def nmap(domain):
-	pass # TODO: 
+	os.system('nmap -sV %s' % domain)
 
 if __name__ == '__main__':
+	
 	cookieJar = cookielib.CookieJar()
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
 	urllib2.install_opener(opener)
-	print '============================== subdomain =============================='
-	querySubdomain(sys.argv[1])
-	print '============================== reverse dns =============================='
-	queryRDNS(sys.argv[1])
-	print '============================== whois =============================='
-	queryWhois(sys.argv[1])
-	print '============================== nmap =============================='
-	nmap(sys.argv[1])
+	
+	options = 0
+	opts, args = getopt.getopt(sys.argv[1:], "rsw")
+	for op, vaule in opts:
+		if op == '-r':
+			options |= 1
+		elif op == '-s':
+			options |= 2
+		elif op == '-w':
+			options |= 4
+
+	if options == 0:
+		options = 1 | 2 | 4 | 8
+
+	if options & 1:
+		print '\n============================== reverse dns ==============================\n'
+		queryRDNS(sys.argv[1])
+	if options & 2:
+		print '\n============================== subdomain ==============================\n'
+		querySubdomain(sys.argv[1])
+	if options & 4:
+		print '\n============================== whois ==============================\n'
+		queryWhois(sys.argv[1])
+	if options & 8:
+		print '\n============================== nmap ==============================\n'
+		nmap(args[0])
 	sys.exit(0)
 
