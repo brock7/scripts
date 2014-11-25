@@ -120,7 +120,10 @@ def nmap(domain):
 	os.system('nmap -sV %s' % domain)
 
 if __name__ == '__main__':
-	
+	import locale	
+	reload(sys)
+	sys.setdefaultencoding(locale.getpreferredencoding())
+
 	cookieJar = cookielib.CookieJar()
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
 	urllib2.install_opener(opener)
@@ -151,6 +154,7 @@ if __name__ == '__main__':
 		queryWhois(args[0])
 	if options & 8:
 		print '\n============================== nmap ==============================\n'
+		sys.stdout.flush()
 		nmap(args[0])
 	sys.exit(0)
 
