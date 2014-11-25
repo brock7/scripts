@@ -15,7 +15,13 @@ from lxml import etree
 import sys,socket
 import json
 
+noTitle = False
+
 def getTitle(domain):
+	global noTitle
+	if noTitle:
+		return ''
+
 	try:
 		if domain[:7] != 'http://':
 			domain = 'http://' + domain
@@ -84,15 +90,20 @@ def toStr(l):
 
 def queryWhois(domain):
 	# fetch cookie
-	urllib2.urlopen('http://whois.www.net.cn/whois/domain/cankaoxiaoxi.com')
-	response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois?host=cankaoxiaoxi.com')
+	if domain.count('.') > 1:
+		domain = domain[domain.find('.') + 1:]
+	urllib2.urlopen('http://whois.www.net.cn/whois/domain/%s' % domain)
+	response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois?host=%s' % domain)
 	jbase = json.loads(response.read())
-	for (k, v) in jbase['module'].items():
-		print k if k[-1:] == ':' else k + ': ', toStr(v) 
-	response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois_full?host=cankaoxiaoxi.com')
+	if jbase['success']:
+		for (k, v) in jbase['module'].items():
+			print k if k[-1:] == ':' else k + ': ', toStr(v) 
+
+	response = urllib2.urlopen('http://whois.www.net.cn/whois/api_whois_full?host=%s' % domain)
 	jdetail = json.loads(response.read())
-	for (k, v) in jdetail['module'].items():
-		print k if k[-1:] == ':' else k + ': ', toStr(v)
+	if jdetail['success']:
+		for (k, v) in jdetail['module'].items():
+			print k if k[-1:] == ':' else k + ': ', toStr(v)
 
 def nmap(domain):
 	os.system('nmap -sV %s' % domain)
@@ -104,9 +115,11 @@ if __name__ == '__main__':
 	urllib2.install_opener(opener)
 	
 	options = 0
-	opts, args = getopt.getopt(sys.argv[1:], "rsw")
+	opts, args = getopt.getopt(sys.argv[1:], "Nrsw")
 	for op, vaule in opts:
-		if op == '-r':
+		if op == '-N':
+			noTitle = True
+		elif op == '-r':
 			options |= 1
 		elif op == '-s':
 			options |= 2
@@ -118,13 +131,13 @@ if __name__ == '__main__':
 
 	if options & 1:
 		print '\n============================== reverse dns ==============================\n'
-		queryRDNS(sys.argv[1])
+		queryRDNS(args[0])
 	if options & 2:
 		print '\n============================== subdomain ==============================\n'
-		querySubdomain(sys.argv[1])
+		querySubdomain(args[0])
 	if options & 4:
 		print '\n============================== whois ==============================\n'
-		queryWhois(sys.argv[1])
+		queryWhois(args[0])
 	if options & 8:
 		print '\n============================== nmap ==============================\n'
 		nmap(args[0])

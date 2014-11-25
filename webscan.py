@@ -64,12 +64,17 @@ class Tester:
 
 results = [
 	"<b>Fatal error</b>:", 
-	"Access Denied",
+	"^Access Denied$",
 	"Microsoft OLE DB Provider", 
 	"You have an error in your SQL syntax", 
 	r'ERROR [0-9]+?:', 
 	"Forbidden", 
 ];
+
+ignores = [
+	"^Unknown$", 
+	"^Bad Request$", 
+]
 
 class SimpleTester(Tester):
 	def scan(self, url, scanner):
@@ -95,6 +100,10 @@ class SimpleTester(Tester):
 				pass
 
 			if checkAll:
+				# add ignore option
+				for p in ignores:
+					if re.search(p, respText, re.I):
+						return False
 				scanner.report(url, respText[:512])
 				return True
 
