@@ -16,6 +16,16 @@ import sys,socket
 import json
 
 noTitle = False
+def encoding(data):
+	if len(data) <= 0:
+		return data
+	encodings = ['utf-8', 'gbk', 'gb2312']   #可以添加其他字符编码
+	for encoding in encodings:
+		try:
+			return data.decode(encoding)
+		except:
+			pass
+	return data
 
 def getTitle(domain):
 	global noTitle
@@ -25,8 +35,8 @@ def getTitle(domain):
 	try:
 		if domain[:7] != 'http://':
 			domain = 'http://' + domain
-		response = urllib2.urlopen(domain)
-		tree = etree.HTML(response.read())
+		response = urllib2.urlopen(domain, timeout = 15)
+		tree = etree.HTML(encoding(response.read()))
 		nodes = tree.xpath("/html/head/title")
 		if len(nodes) >= 1:
 			return nodes[0].text

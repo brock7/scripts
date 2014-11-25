@@ -30,7 +30,8 @@ config = './config'
 scanWait = 0
 scanType = 0 # 0 list, 1 crawler
 scanDepth = 3
-notFoundInfo = u'Page Not Found|页面没有找到|找不到页面|页面不存在'
+
+notFoundInfo = u'Page Not Found|页面没有找到|找不到页面|页面不存在|^Unknown$|^Bad Request$'
 saveCookie = False
 cookie = ''
 searchPage = 10
@@ -71,18 +72,16 @@ results = [
 	"Forbidden", 
 ];
 
-ignores = [
-	"^Unknown$", 
-	"^Bad Request$", 
-]
-
+#import pdb
 class SimpleTester(Tester):
 	def scan(self, url, scanner):
-		# print 'SimpleTester.scan:', url
+		#print 'SimpleTester.scan:', url
+		#pdb.set_trace()
 		req = urllib2.Request(url)
 		response = scanner.sendReq(req)
 		if response == None:
 			return False
+		#print response
 		try:
 			if type(response) == types.StringType:
 				respText = response
@@ -100,18 +99,20 @@ class SimpleTester(Tester):
 				pass
 
 			if checkAll:
-				# add ignore option
-				for p in ignores:
-					if re.search(p, respText, re.I):
-						return False
-				scanner.report(url, respText[:512])
-				return True
+				#pdb.set_trace()
+				if not re.search(notFoundInfo, respText, re.IGNORECASE):
+					scanner.report(url, respText[:512])
+					return True
+				else:
+					#pdb.set_trace()
+				 	return False
 
 			for p in results:
 				if re.search(p , respText, re.IGNORECASE):
 					scanner.report(url, respText[:512])
 					return True
 		except:
+			raise
 			pass
 		return False
 
@@ -149,7 +150,7 @@ class Scanner:
 			if e.code != 404:
 				return e.msg
 			else:
-				return None
+				return "Page Not Found"
 		except Exception,e:
 			if verbose:
 				log('Exception: ' + repr(e) + ' at :' + request.get_full_url())
@@ -171,6 +172,7 @@ class Scanner:
 				reported = True
 		if not verbose and  not reported:
 			sys.stdout.write('.')
+			sys.stdout.flush()
 			self._progress = True
 
 	def scan(self):
