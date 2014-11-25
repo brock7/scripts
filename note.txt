@@ -55,3 +55,5 @@ http://whois.www.net.cn/whois/api_whois_full?host=cankaoxiaoxi.com&web_server=wh
 # 取title
 $curl -s --data "domain=cankaoxiaoxi.com&b2=1&b3=1&b4=1" "http://i.links.cn/subdomain/"|xpath.py "/html/head/title"
 cankaoxiaoxi.com下所有子域名列表-站长帮手网
+
+# for testing only
