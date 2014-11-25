@@ -37,9 +37,10 @@ def getTitle(domain):
 			domain = 'http://' + domain
 		response = urllib2.urlopen(domain, timeout = 15)
 		tree = etree.HTML(encoding(response.read()))
-		nodes = tree.xpath("/html/head/title")
+		nodes = tree.xpath("/html/head/title/text()")
+		# nodes = tree.xpath("/html/head/title") # 没有 text() 时，返回节点对象，用 nodes[0].text 访问
 		if len(nodes) >= 1:
-			return nodes[0].text
+			return nodes[0]
 		else:
 			return 'No Title'
 	except Exception, e:
