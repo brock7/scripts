@@ -41,11 +41,8 @@ else:
 
 nodes = tree.xpath(args[0])
 for node in nodes:
-	if node == types.StringType:
-		print node
+	if hasattr(node, 'text'):
+		print node.text
 	else:
-		if hasattr(node, 'text'):
-			print node.text
-		else:
-		 	print node
+		print node
 
