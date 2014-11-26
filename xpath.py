@@ -12,6 +12,10 @@ import sys
 from lxml import etree
 import types
 import getopt
+import locale
+
+reload(sys)
+sys.setdefaultencoding(locale.getpreferredencoding())
 
 docType = 'HTML'
 
