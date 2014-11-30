@@ -1,3 +1,8 @@
+/admin.tar.gz
+/admin.tar.bz2
+/admin.zip
+/admin.rar
+/debug/
 /data/backup/
 /data/backup~1/
 /dede
