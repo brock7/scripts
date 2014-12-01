@@ -18,6 +18,9 @@ def getUserAgent():
 	index = random.randint(0, len(userAgents) - 1)
 	return userAgents[index]
 	
+def setupUserAgent(req):
+	req.add_header('User-agent', getUserAgent())
+
 topDomainPostfix = (
 	'.com','.la','.io',
 	'.co',
