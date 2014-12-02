@@ -1,5 +1,5 @@
 #!/bin/sh
-# bashshock.sh -w ext:cgi vancl.com
+# ./bashshock.sh -w 'ext:cgi site:www.chinaunix.net'
 ./ghack.py $@ | awk '{
 	if (length($0) > 2 && substr($0, 1, 1) != "*") {
 		count += 1;

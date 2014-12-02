@@ -24,6 +24,7 @@ opener = None
 verbose = True
 waitForPerReq = 0.0
 searchPage = 1
+resultCount = 20
 
 hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip', 
 	'ext:conf', 'ext:rar', 'ext:sh', 'ext:gz', 'ext:bz2', 'ext:tar', 'ext:tgz', 
@@ -44,7 +45,7 @@ def googleHackLocal(host):
 			continue
 		print '******* [google] site:%s %s *******' % (host, hack)
 		try:
-			for url in google(opener, 'site:%s %s' % (host, hack), 20):
+			for url in google(opener, 'site:%s %s' % (host, hack), resultCount):
 				print ' ' + url
 		except Exception,e:
 			print 'Exception', e
@@ -86,7 +87,7 @@ if __name__ == "__main__":
 		print '\n\texample:\n\t\tghack.py www.example.com'
 
 	localOnly = False
-	opts, args = getopt.getopt(sys.argv[1:], "hlp:g:GP:vw:")
+	opts, args = getopt.getopt(sys.argv[1:], "hln:p:g:GP:vw:")
 	cookieJar = None
 	proxy = ""
 	what = ""
@@ -99,6 +100,9 @@ if __name__ == "__main__":
 			googleHome = value
 		elif op == '-G':
 			google = googleSearch
+		elif op == '-n':
+			resultCount = int(value)
+			#print resultCount
 		elif op == '-h':
 			usage()
 			sys.exit(0)
@@ -122,7 +126,7 @@ if __name__ == "__main__":
 		
 	if len(what) > 0:
 		# google(args[0], what, page = searchPage)
-		for url in google(opener, what, 20):
+		for url in google(opener, what, resultCount):
 			print url
 		sys.exit(0)
 	googleHackLocal(args[0])

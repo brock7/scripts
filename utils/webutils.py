@@ -26,7 +26,7 @@ def setupRequest(req):
 
 cookieJar = None
 def setupOpener(opener):
-	if os.environ.has_key('save_cookie'):
+	if not os.environ.has_key('no_save_cookie'):
 		global cookieJar
 		cookieJar = cookielib.CookieJar() 
 		opener.add_handler(urllib2.HTTPCookieProcessor(cookieJar))
