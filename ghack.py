@@ -108,7 +108,7 @@ if __name__ == "__main__":
 			verbose = True
 		elif op == '-w':
 			what = value
-	if len(args) == 0:
+	if len(args) == 0 and len(what) == 0:
 		usage()
 		sys.exit(0)
 
@@ -121,7 +121,9 @@ if __name__ == "__main__":
 		sys.exit(-1)
 		
 	if len(what) > 0:
-		google(args[0], what, page = searchPage)
+		# google(args[0], what, page = searchPage)
+		for url in google(opener, what, 20):
+			print url
 		sys.exit(0)
 	googleHackLocal(args[0])
 	if not localOnly:
