@@ -130,7 +130,7 @@ def _gfsosoSearch(opener, what, resultNum = -1):
 			yield result
 			if resultNum != -1 and resCnt >= resultNum:
 				raise StopIteration()
-		if i < NUM_PER_PAGE:
+		if i < NUM_PER_PAGE: # FIXME: if the result total is 10... :(
 			raise StopIteration()
 			break
 		pageNum += 1
