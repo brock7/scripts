@@ -24,6 +24,8 @@ GOOGLE_HOME = 'http://64.233.161.104/'
 GFSOSO_HOME = 'http://www.gfsoso.com/'
 REQ_TIMEOUT = 15
 NUM_PER_PAGE = 10
+reqDelay = 0.0
+maxResult = 10
 
 def _urlFilter(url):
 	if url.find('http:') == -1 and url.find('ftp:') == -1 and url.find('https:') == -1:
@@ -81,6 +83,8 @@ def _makeCookie(name, value):
 		comment_url = None,
 		rest = None)
 
+_cookieFetched = False
+
 def _refreshCookie(opener, what):
 	url = GFSOSO_HOME + '?q=%s' % (what)
 	req = urllib2.Request(url)
@@ -97,6 +101,8 @@ def _refreshCookie(opener, what):
 	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_pages', '1'))
 	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_times', '1'))
 	webutils.cookieJar.set_cookie(_makeCookie('_GFTOKEN', m.group(1)))
+	global _cookieFetched
+	_cookieFetched = True
 	
 def _gfsosoSearch(opener, what, resultNum = -1):
 	what = urllib2.quote(what)
@@ -105,22 +111,31 @@ def _gfsosoSearch(opener, what, resultNum = -1):
 	else:
 		pageCount = int((resultNum + NUM_PER_PAGE - 1) / NUM_PER_PAGE)
 
-	_refreshCookie(opener, what)
-	pageNum = 1
+	if not _cookieFetched:
+		_refreshCookie(opener, what)
+
+	pageNum = 0
+	resCnt = 0
 	while True:
 		if pageCount != -1:
 			if pageNum >= pageCount:
 				break
 
-		url = GFSOSO_HOME + '?pn=%d&q=%s&t=1' % (pageNum * 10, what)
+		url = GFSOSO_HOME + '?pn=%d&q=%s&t=1' % ((pageNum + 1) * 10, what)
 		#print url
 		i = 0
 		for result in _gfsosoPageHandler(opener, url):
 			i += 1
+			resCnt += 1
 			yield result
+			if resultNum != -1 and resCnt >= resultNum:
+				raise StopIteration()
 		if i < NUM_PER_PAGE:
 			raise StopIteration()
+			break
 		pageNum += 1
+		if reqDelay > 0:
+		 	time.sleep(reqDelay)
 
 google = _gfsosoSearch
 
