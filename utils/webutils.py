@@ -1,4 +1,7 @@
 import random
+import os
+import urllib2
+import cookielib
 
 userAgents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
@@ -18,9 +21,20 @@ def getUserAgent():
 	index = random.randint(0, len(userAgents) - 1)
 	return userAgents[index]
 	
-def setupUserAgent(req):
+def setupRequest(req):
 	req.add_header('User-agent', getUserAgent())
 
+cookieJar = None
+def setupOpener(opener):
+	if os.environ.has_key('save_cookie'):
+		global cookieJar
+		cookieJar = cookielib.CookieJar() 
+		opener.add_handler(urllib2.HTTPCookieProcessor(cookieJar))
+
+	if os.environ.has_key('http_proxy'):
+		prx = os.environ['http_proxy'].split(':');
+		opener.add_handler(urllib2.ProxyHandler({prx[0]: prx[1]}))
+		
 topDomainPostfix = (
 	'.com','.la','.io',
 	'.co',
