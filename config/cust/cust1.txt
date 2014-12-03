@@ -1,5 +1,10 @@
-/.git/
-/.svn/
+/.htaccess
+/.git/config
+/.svn/entries
+/.test.php
+/.test.jsp
+/.test.asp
+/.test.aspx
 /admin.tar.gz
 /admin.tar.bz2
 /admin.zip
