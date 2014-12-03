@@ -143,3 +143,9 @@ def getPageTitle(opener, url):
 			return 'Error: ' + e.msg
 		return 'Error: ' + repr(e)
 
+def captrueHtml(text):
+	return text.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+
+def escapeHtml(text):
+	return text.replace("&amp;", "&").replace("&quot;", '"').replace("&lt;", "<").replace("&gt;", ">")
+

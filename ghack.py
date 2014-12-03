@@ -17,12 +17,16 @@ import random
 from lxml import etree
 import time
 import locale
+
+from StringIO import StringIO
+import gzip
+
 from utils.google import google
 from utils import webutils
 
 opener = None
 verbose = True
-waitForPerReq = 0.0
+waitForPerReq = 1.0
 searchPage = 1
 resultCount = 20
 
@@ -46,7 +50,7 @@ def googleHackLocal(host):
 		print '******* [google] site:%s %s *******' % (host, hack)
 		try:
 			for url in google(opener, 'site:%s %s' % (host, hack), resultCount):
-				print ' ' + url
+				print '     [#] ' + url
 		except Exception,e:
 			print 'Exception', e
 			raise
@@ -57,21 +61,46 @@ def googleHackLocal(host):
 		count = count + 1
 
 def googleHackGhdb(host):
-	return # Disabled
-	print '******* Hack exploit-db/GHDB'
-	i = 2
+	#return # Disabled
+	print '******* Hack exploit-db/GHDB *******'
+	i = 3977
+	count = 0
+	pattern = re.compile(r'Google search: <a href=\"http://www.google.com/search\?.*?q\=([^"]+)')
 	while True:
-		html = urllib2.urlopen('http://www.exploit-db.com/ghdb/%d/' % i).read()
-		# FIXME: sometime result is unavaliable
+		req = urllib2.Request('http://www.exploit-db.com/ghdb/%d/' % i)
+		webutils.setupRequest(req)
+		req.add_header('Accept-Encoding', 'gzip,deflate')
+		try:
+			response = opener.open(req, timeout = 15)
+			if response.info().get('Content-Encoding') == 'gzip':
+				buf = StringIO( response.read())
+				f = gzip.GzipFile(fileobj=buf)
+				html= f.read()
+			else:
+				html = response.read()
+		except:
+			continue
 		#print html
-		res = re.search(r'Google search: <a href=\"http://www.google.com/search\?.*?q\=([^"]+)', html)
+		res = pattern.search(html)
 		if res == None:
 			#print str(html)
+			#break
+			continue
+		if len(res.groups()) <= 0:
+			continue
+		#res = urllib.unquote_plus(res.group(1))
+		what = webutils.escapeHtml(res.group(1))
+		print '******* [google] [GHDB: %d] site:%s %s *******' % (i, host, what)
+		for url in google(opener, 'site:%s %s' % (host, what), resultCount):
+			print '    [#] ' + url
+		i -= 1
+		if i <= 0:
 			break
-		res = urllib.unquote_plus(res.group(1))
-		google(host, res)
-		i += 1
-	pass
+
+		time.sleep(random.randint(2, 5))
+		if count % 10 == 0:
+			time.sleep(10)
+		count = count + 1
 
 #####################################################################
 
@@ -87,7 +116,8 @@ if __name__ == "__main__":
 		print '\n\texample:\n\t\tghack.py www.example.com'
 
 	localOnly = False
-	opts, args = getopt.getopt(sys.argv[1:], "hln:p:g:GP:vw:")
+	remoteOnly = False
+	opts, args = getopt.getopt(sys.argv[1:], "hln:p:g:GP:rvw:")
 	cookieJar = None
 	proxy = ""
 	what = ""
@@ -108,6 +138,8 @@ if __name__ == "__main__":
 			sys.exit(0)
 		elif op == '-P':
 			searchPage = int(value)
+		elif op == '-r':
+			remoteOnly = True
 		elif op == '-v':
 			verbose = True
 		elif op == '-w':
@@ -129,7 +161,8 @@ if __name__ == "__main__":
 		for url in google(opener, what, resultCount):
 			print url
 		sys.exit(0)
-	googleHackLocal(args[0])
+	if not remoteOnly:
+		googleHackLocal(args[0])
 	if not localOnly:
 		googleHackGhdb(args[0])		
 

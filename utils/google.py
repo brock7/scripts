@@ -82,7 +82,8 @@ def _gfsosoPageHandler(opener, url):
 			continue
 			
 		url = url.replace('\\', '')
-		url = url.replace('&amp;', '&')
+		# url = url.replace('&amp;', '&')
+		url = webutils.escapeHtml(url)
 		yield url
 
 def _makeCookie(name, value):

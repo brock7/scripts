@@ -17,7 +17,8 @@ class Crawler(object):
 		urlP = urlparse.urlparse(url)
 		if urlP.hostname == None:
 			url = urlparse.urljoin(refer, url)
-		url = url.replace('&amp;', '&')
+		#url = url.replace('&amp;', '&')
+		url = webutils.escapeHtml(url)
 		return url
 	
 	def scanPage(self, url, depth):
