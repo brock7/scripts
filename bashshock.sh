@@ -1,6 +1,7 @@
-#!/bin/sh
-# ./bashshock.sh -w 'ext:cgi site:www.chinaunix.net'
-./ghack.py $@ | awk '{
+#!/bin/bash
+#./bashshock.sh -w "ext:cgi site:www.chinaunix.net"
+#./bashshock.sh -w "site:baidu.com ext:cgi"
+./ghack.py "$@" | awk '{
 	if (length($0) > 2 && substr($0, 1, 1) != "*") {
 		count += 1;
 		sub(/\x0d/, "", $0)
