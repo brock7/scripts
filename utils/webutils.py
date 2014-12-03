@@ -1,3 +1,5 @@
+# _*_ encoding: utf-8 _*_
+
 import random
 import os
 import urllib2
@@ -35,7 +37,7 @@ def setupOpener(opener):
 		prx = os.environ['http_proxy'].split(':');
 		opener.add_handler(urllib2.ProxyHandler({prx[0]: prx[1]}))
 		
-topDomainPostfix = (
+topurlPostfix = (
 	'.com','.la','.io',
 	'.co',
 	'.info',
@@ -117,4 +119,27 @@ def getTopDomain(url):
 	pattern = re.compile(extractPattern,re.IGNORECASE)
 	m = pattern.search(host)
 	return m.group() if m else host
+
+def getPageTitle(opener, url):
+	global noTitle
+	if noTitle:
+		return ''
+
+	try:
+		if url[:7] != 'http://':
+			url = 'http://' + url
+		req = urllib2.Request(url)
+		setupRequest(req)
+		response = opener.open(req, timeout = 15)
+		tree = etree.HTML(encoding(response.read()))
+		nodes = tree.xpath("/html/head/title/text()")
+		# nodes = tree.xpath("/html/head/title") # 没有 text() 时，返回节点对象，用 nodes[0].text 访问
+		if len(nodes) >= 1:
+			return nodes[0]
+		else:
+			return 'No Title'
+	except Exception, e:
+		if hasattr(e, 'msg'):
+			return 'Error: ' + e.msg
+		return 'Error: ' + repr(e)
 

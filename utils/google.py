@@ -27,9 +27,30 @@ NUM_PER_PAGE = 10
 reqDelay = 0.0
 maxResult = 10
 
+_cookieFetched = False
+
+def _refreshCookie(opener, what):
+	url = GFSOSO_HOME + '?q=%s' % (what)
+	req = urllib2.Request(url)
+	webutils.setupRequest(req)
+	req.add_header('Referer', GFSOSO_HOME)
+	try:
+		response = opener.open(req, timeout = REQ_TIMEOUT)
+		html = response.read()
+	except Exception, e:
+		print "Exception: url: %s - " % url, e
+		return
+	m = re.search(r"_GFTOKEN','([0-9a-f]+)'", html)
+	
+	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_pages', '1'))
+	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_times', '1'))
+	webutils.cookieJar.set_cookie(_makeCookie('_GFTOKEN', m.group(1)))
+	global _cookieFetched
+	_cookieFetched = True
+
 def _urlFilter(url):
 	if url.find('http:') == -1 and url.find('ftp:') == -1 and url.find('https:') == -1:
-	    return False
+		return False
 	if url.find('google.com') != -1:
 		return False
 	if url.find('gfsoso.com') != -1:
@@ -48,8 +69,8 @@ def _gfsosoPageHandler(opener, url):
 		html = response.read()
 		#print html
 	except Exception, e:
-	 	print "Exception: url: %s - " % url, e
-	 	raise StopIteration()
+		print "Exception: url: %s - " % url, e
+		raise StopIteration()
 	nodes = re.findall(r' href=\\["\'](.*?)\\["\']', html)
 	for node in nodes:
 		m = re.search('/url\?q=([^&]+)', node)
@@ -83,28 +104,8 @@ def _makeCookie(name, value):
 		comment_url = None,
 		rest = None)
 
-_cookieFetched = False
-
-def _refreshCookie(opener, what):
-	url = GFSOSO_HOME + '?q=%s' % (what)
-	req = urllib2.Request(url)
-	webutils.setupRequest(req)
-	req.add_header('Referer', GFSOSO_HOME)
-	try:
-		response = opener.open(req, timeout = REQ_TIMEOUT)
-		html = response.read()
-	except Exception, e:
-	 	print "Exception: url: %s - " % url, e
-		return
-	m = re.search(r"_GFTOKEN','([0-9a-f]+)'", html)
-	
-	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_pages', '1'))
-	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_times', '1'))
-	webutils.cookieJar.set_cookie(_makeCookie('_GFTOKEN', m.group(1)))
-	global _cookieFetched
-	_cookieFetched = True
-	
 def _gfsosoSearch(opener, what, resultNum = -1):
+	
 	what = urllib2.quote(what)
 	if resultNum == -1:
 		pageCount = -1

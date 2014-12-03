@@ -23,34 +23,21 @@ import locale
 #import socket
 import string
 import codecs
+from utils import webutils
 
 checkAll = False
 verbose = False
 config = './config'
 scanWait = 0
 scanType = 0 # 0 list, 1 crawler
-scanDepth = 3
+scanDepth = 2
 
 notFoundInfo = u'Page Not Found|页面没有找到|找不到页面|页面不存在|^Unknown$|^Bad Request$'
 saveCookie = False
 cookie = ''
-searchPage = 10
+searchCount = -1
 googleWhat = ''
 ofile = sys.stdout
-
-user_agents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', \
-	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', \
-	'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533+ \
- 	(KHTML, like Gecko) Element Browser 5.0', \
-	'IBM WebExplorer /v0.94', 'Galaxy/1.0 [en] (Mac OS X 10.5.6; U; en)', \
-	'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)', \
-	'Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14', \
-	'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) \
-	Version/6.0 Mobile/10A5355d Safari/8536.25', \
-	'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) \
-	Chrome/28.0.1468.0 Safari/537.36', \
-	'Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0', 
-	'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)']
 
 def log(str):
 	str += '\n'
@@ -134,8 +121,8 @@ class Scanner:
 		log(msg)
 		log('=' * 60)
 
-	def sendReq(self, request, data = None, timeout = 15):
-		request.add_header('User-agent', self._user_agent)
+	def sendReq(self, request, data = None, cookie = '', timeout = 15):
+		webutils.setupRequest(request)
 		if len(cookie) > 0:
 			request.add_header('Cookie', cookie)
 
@@ -178,24 +165,18 @@ class Scanner:
 	def scan(self):
 		#pdb.set_trace()
 		# print '=' * 60
-		if saveCookie:
-			cookieJar = cookielib.CookieJar()
-			#"""
-			#ck = cookielib.Cookie(version=0, name='Name', value='1', port=None, 
-			#		port_specified=False, domain='www.example.com', domain_specified=False, 
-			#		domain_initial_dot=False, path='/', path_specified=True, secure=False, 
-			#		expires=None, discard=True, comment=None, comment_url=None, 
-			#		rest={'HttpOnly': None}, rfc2109=False)
-			#cj.set_cookie(ck)
-			#"""
-			self._opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
-		else:
-			self._opener = urllib2.build_opener()
-		index = random.randint(0, len(user_agents) - 1)
-		self._user_agent = user_agents[index]
+		#"""
+		#ck = cookielib.Cookie(version=0, name='Name', value='1', port=None, 
+		#		port_specified=False, domain='www.example.com', domain_specified=False, 
+		#		domain_initial_dot=False, path='/', path_specified=True, secure=False, 
+		#		expires=None, discard=True, comment=None, comment_url=None, 
+		#		rest={'HttpOnly': None}, rfc2109=False)
+		#cj.set_cookie(ck)
+		#"""
+		self._opener = urllib2.build_opener()
+		webutils.setupOpener(self._opener)
 
 		urls = self.getUrls()
-		
 		for url in urls:
 			self.scanUrl(url)
 		return True
@@ -217,98 +198,27 @@ class ListScanner(Scanner):
 			url = self._hostRoot + uri
 			yield url
 
+from utils import crawler
 class CrawlerScanner(Scanner):
-	
-	_linkList = set()
-	
-	_reexp = re.compile(r"""<a[^>]*?href\s*=\s*['"]?([^'"\s>]{1,500})['">\s]""", 
-				re.I | re.M | re.S)
-				
-	_range = '.*'
-
-	def __init__(self, hostRoot, testers = [SimpleTester()]):
-		self._hostRoot = hostRoot
-		urlP = urlparse.urlparse(hostRoot)
-		
-		# FIXME: _range has a bug. some url isn't in the range 
-		if urlP.hostname.count('.') > 1:
-			self._range = urlP.hostname[urlP.hostname.find('.') + 1:]
-		else:
-			self._range = urlP.hostname;
-		#print urlP.hostname, self._range
+	def __init__(self, startUrl, testers = [SimpleTester()]):
 		self._testers = testers
-
-	def adjustUrl(self, refer, url):
-		if re.search(r'^\/\/', url):
-			url = 'http:' + url
-
-		urlP = urlparse.urlparse(url)
-		#print 'protocol:',urlP.scheme
-		#print 'hostname:',urlP.hostname
-		#print 'port:',urlP.port
-		#print 'path:',urlP.path
-		#print 'query:', urlP.query
-		#print 'params', urlP.params
-		if urlP.hostname == None:
-			url = urlparse.urljoin(refer, url)
-		url = url.replace('&amp;', '&')
-		return url
-
-	def scanPage(self, url, depth):
-		depth += 1
-		if depth < scanDepth:
-			#print url
-			req = urllib2.Request(url)
-			response = self.sendReq(req)
-			if response == None:
-				raise StopIteration()
-			try:
-				html = response.read()
-			except:
-				#raise StopIteration()
-				html = ''
-			#tree = etree.HTML(html)
-			#links = tree.xpath(r"/a//@href")			
-			links = self._reexp.findall(html)
-			#print len(links), links
-			linkRec = set()
-			for link in links:
-				if re.search(r'^javascript:', link):
-					continue
-				link = self.adjustUrl(url, link)
-				if not link in self._linkList and not link in linkRec:
-					if link.find(self._range) != -1:
-						linkRec.add(link)
-						yield link
-			self._linkList = self._linkList.union(linkRec)
-			for link in linkRec:				
-				for link2 in self.scanPage(link, depth):
-					yield link2
-
+		self._startUrl = startUrl
+		
 	def getUrls(self):
-		self._linkList.add(self._hostRoot)
-		yield self._hostRoot
-		for url in self.scanPage(self._hostRoot, 0):
-			yield url	
+		myCrawler = crawler.Crawler()
+		for url in myCrawler.crawl(self._opener, self._startUrl):
+			yield url
 
-import ghack
+from utils import google
 class GoogleScanner(Scanner):
 	def __init__(self, hostRoot, testers = (SimpleTester(), ) ):
 		self._hostRoot = hostRoot
 		self._testers = testers
 	
 	def getUrls(self):
-		if ghack.opener == None:
-			ghack.opener = self._opener
-			# global verbose
-			ghack.verbose = verbose
-			ghack.waitForPerReq = scanWait
-
-		urls = set()
-		ghack.google(self._hostRoot, googleWhat, searchPage, 
-			lambda url: urls.add(url))
-			# print len(self._urls)
-		for url in urls:
+		gen = google.google(self._opener, 'site:%s %s' % (self._hostRoot, googleWhat), 
+				searchCount)
+		for url in gen:
 			yield url
 
 #####################################################################
@@ -508,7 +418,7 @@ if __name__ == "__main__":
 		-n <keyword> filter out the keyword
 		-N <keyword> extra filter
 		-o output file
-		-p <searchPage>  default 5
+		-p <search result count>  default 100
 		-s save cookie
 		-t <scanType> 0 list, 1 crawler, 2 google. default 0
 		-v verbose
@@ -546,7 +456,7 @@ if __name__ == "__main__":
 		elif op == '-o':
 			outfile = value
 		elif op == '-p':
-			searchPage = int(value)
+			searchCount = int(value)
 		elif op == '-s':
 			saveCookie = True
 		elif op == '-t':
