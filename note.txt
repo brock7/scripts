@@ -61,3 +61,7 @@ cankaoxiaoxi.com下所有子域名列表-站长帮手网
 /html/head/meta[1]/@charset
 
 # 解决 ghack 输出乱码
+
+# aol search it's base on google
+http://search.aol.com/aol/search?enabled_terms=&s_it=comsearch&q=site%3Aletv.com+ext%3Axls&s_chn=prt_aol20
+

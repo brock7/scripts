@@ -50,7 +50,7 @@ def googleHackLocal(host):
 		print '******* [google] site:%s %s *******' % (host, hack)
 		try:
 			for url in google(opener, 'site:%s %s' % (host, hack), resultCount):
-				print '     [#] ' + url
+				print '     [#] ' + url.decode('utf-8')
 		except Exception,e:
 			print 'Exception', e
 			raise
@@ -92,7 +92,7 @@ def googleHackGhdb(host):
 		what = webutils.escapeHtml(res.group(1))
 		print '******* [google] [GHDB: %d] site:%s %s *******' % (i, host, what)
 		for url in google(opener, 'site:%s %s' % (host, what), resultCount):
-			print '    [#] ' + url
+			print '    [#] ' + url.decode('utf-8')
 		i -= 1
 		if i <= 0:
 			break
@@ -107,6 +107,10 @@ def googleHackGhdb(host):
 if __name__ == "__main__":
 	#import pdb
 	#pdb.set_trace()
+	import locale
+	reload(sys)
+	sys.setdefaultencoding(locale.getpreferredencoding())
+
 	def usage():
 		print 'ghack.py [op] host'
 		print '\t-l\t\tseach local GHDB only'
@@ -159,7 +163,7 @@ if __name__ == "__main__":
 	if len(what) > 0:
 		# google(args[0], what, page = searchPage)
 		for url in google(opener, what, resultCount):
-			print url
+			print url.decode('utf-8')
 		sys.exit(0)
 	if not remoteOnly:
 		googleHackLocal(args[0])

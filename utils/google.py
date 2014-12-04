@@ -25,7 +25,8 @@ GFSOSO_HOME = 'http://www.gfsoso.com/'
 REQ_TIMEOUT = 15
 NUM_PER_PAGE = 10
 reqDelay = 0.0
-maxResult = 10
+#maxResult = 10
+totalRecord = sys.maxint
 
 _cookieFetched = False
 
@@ -59,6 +60,24 @@ def _urlFilter(url):
 		return False
 	return True
 
+pattern = re.compile(r'<span>约有([0-9]+)项结果')
+pattern2 = re.compile(r'抱歉，没有找到与“.*?”相关的网页')
+
+def _updateTotalRecord(html):
+	global totalRecord
+	m = pattern2.search(html)
+	if m != None:
+		totalRecord = 0	
+		#print 'not found'
+		return
+	m = pattern.search(html)
+	if m == None:
+		return
+	if len(m.groups()) <= 0:
+		return
+	totalRecord = int(m.group(1))
+	#print 'totalRecord', totalRecord
+
 def _gfsosoPageHandler(opener, url):
 	req = urllib2.Request(url)
 	webutils.setupRequest(req)
@@ -71,6 +90,9 @@ def _gfsosoPageHandler(opener, url):
 	except Exception, e:
 		print "Exception: url: %s - " % url, e
 		raise StopIteration()
+	if totalRecord == sys.maxint:
+		_updateTotalRecord(html)
+
 	nodes = re.findall(r' href=\\["\'](.*?)\\["\']', html)
 	for node in nodes:
 		m = re.search('/url\?q=([^&]+)', node)
@@ -105,7 +127,7 @@ def _makeCookie(name, value):
 		comment_url = None,
 		rest = None)
 
-def _gfsosoSearch(opener, what, resultNum = -1):
+def _gfsosoSearch(opener, what, resultNum = -1, startNum = 0):
 	
 	what = urllib2.quote(what)
 	if resultNum == -1:
@@ -113,28 +135,39 @@ def _gfsosoSearch(opener, what, resultNum = -1):
 	else:
 		pageCount = int((resultNum + NUM_PER_PAGE - 1) / NUM_PER_PAGE)
 
+	startPage = int((startNum + NUM_PER_PAGE - 1) / NUM_PER_PAGE)
+
 	if not _cookieFetched:
 		_refreshCookie(opener, what)
 
-	pageNum = 0
+	global totalRecord
+	pageNum = 1
 	resCnt = 0
 	while True:
 		if pageCount != -1:
-			if pageNum >= pageCount:
+			if pageNum > pageCount:
 				break
 
-		url = GFSOSO_HOME + '?pn=%d&q=%s&t=1' % ((pageNum + 1) * 10, what)
+		url = GFSOSO_HOME + '?pn=%d&q=%s&t=1' % ((startPage + pageNum) * 10, what)
 		#print url
-		i = 0
+		# i = 0
 		for result in _gfsosoPageHandler(opener, url):
-			i += 1
+			# i += 1
 			resCnt += 1
 			yield result
 			if resultNum != -1 and resCnt >= resultNum:
 				raise StopIteration()
-		if i < NUM_PER_PAGE: # FIXME: if the result total is 10... :(
+			if resCnt >= totalRecord:
+				raise StopIteration()
+
+		if totalRecord == sys.maxint:
+			totalRecord = resultNum			
+
+		if resCnt >= totalRecord:
 			raise StopIteration()
-			break
+		#if i < NUM_PER_PAGE: # FIXME: if the result total is 10... :(
+		#	raise StopIteration()
+		#	break
 		pageNum += 1
 		if reqDelay > 0:
 		 	time.sleep(reqDelay)
