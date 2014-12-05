@@ -1,0 +1,61 @@
+var a6435tf = "51la";
+var a6435pu = "";
+var a6435pf = "51la";
+var a6435su = window.location;
+var a6435sf = document.referrer;
+var a6435of = "";
+var a6435op = "";
+var a6435ops = 1;
+var a6435ot = 1;
+var a6435d = new Date();
+var a6435color = "";
+if (navigator.appName == "Netscape") {
+    a6435color = screen.pixelDepth;
+} else {
+    a6435color = screen.colorDepth;
+}
+try {
+    a6435tf = top.document.referrer;
+} catch(e) {}
+try {
+    a6435pu = window.parent.location;
+} catch(e) {}
+try {
+    a6435pf = window.parent.document.referrer;
+} catch(e) {}
+try {
+    a6435ops = document.cookie.match(new RegExp("(^| )AJSTAT_ok_pages=([^;]*)(;|$)"));
+    a6435ops = (a6435ops == null) ? 1 : (parseInt(unescape((a6435ops)[2])) + 1);
+    var a6435oe = new Date();
+    a6435oe.setTime(a6435oe.getTime() + 60 * 60 * 1000);
+    document.cookie = "AJSTAT_ok_pages=" + a6435ops + ";path=/;expires=" + a6435oe.toGMTString();
+    a6435ot = document.cookie.match(new RegExp("(^| )AJSTAT_ok_times=([^;]*)(;|$)"));
+    if (a6435ot == null) {
+        a6435ot = 1;
+    } else {
+        a6435ot = parseInt(unescape((a6435ot)[2]));
+        a6435ot = (a6435ops == 1) ? (a6435ot + 1) : (a6435ot);
+    }
+    a6435oe.setTime(a6435oe.getTime() + 365 * 24 * 60 * 60 * 1000);
+    document.cookie = "AJSTAT_ok_times=" + a6435ot + ";path=/;expires=" + a6435oe.toGMTString();
+} catch(e) {}
+try {
+    if (document.cookie == "") {
+        a6435ops = -1;
+        a6435ot = -1;
+    }
+} catch(e) {}
+a6435of = a6435sf;
+if (a6435pf !== "51la") {
+    a6435of = a6435pf;
+}
+if (a6435tf !== "51la") {
+    a6435of = a6435tf;
+}
+a6435op = a6435pu;
+try {
+    lainframe
+} catch(e) {
+    a6435op = a6435su;
+}
+document.write('<img style="width:0px;height:0px" src="http://web1.51.la:82/go.asp?svid=5&id=4296435&tpages=' + a6435ops + '&ttimes=' + a6435ot + '&tzone=' + (0 - a6435d.getTimezoneOffset() / 60) + '&tcolor=' + a6435color + '&sSize=' + screen.width + ',' + screen.height + '&referrer=' + escape(a6435of) + '&vpage=' + escape(a6435op) + '" />');
