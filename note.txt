@@ -65,3 +65,24 @@ cankaoxiaoxi.com下所有子域名列表-站长帮手网
 # aol search it's base on google
 http://search.aol.com/aol/search?enabled_terms=&s_it=comsearch&q=site%3Aletv.com+ext%3Axls&s_chn=prt_aol20
 
+#ck = cookielib.Cookie(version=0, name='Name', value='1', port=None, 
+#		port_specified=False, domain='www.example.com', domain_specified=False, 
+#		domain_initial_dot=False, path='/', path_specified=True, secure=False, 
+#		expires=None, discard=True, comment=None, comment_url=None, 
+#		rest={'HttpOnly': None}, rfc2109=False)
+#cj.set_cookie(ck)
+
+"""
+class SqlInjectionTester(Tester):
+	def scan(self, url, scaner):
+		pass
+
+# /DZ/Data/BACKUP~1/141010~1.SQL OR /DZ/DATA/BACKUP/???.SQL
+# guess by date     ~~~~~~~~
+# it's effective in winnt
+class DZBackupTester(Tester): # FIXME: change to Scanner, not Tester
+	def scan(self, url, scanner):
+		pass # TODO:
+"""
+
+

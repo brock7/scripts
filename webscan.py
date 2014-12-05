@@ -8,6 +8,9 @@
 #
 
 import sys, os
+reload(sys)
+sys.path.append('utils')
+
 import urllib2
 import cookielib
 import re
@@ -24,6 +27,7 @@ import locale
 import string
 import codecs
 from utils import webutils
+import importlib
 
 checkAll = False
 verbose = False
@@ -32,12 +36,12 @@ scanWait = 0
 scanType = 0 # 0 list, 1 crawler
 scanDepth = 2
 
-notFoundInfo = u'Page Not Found|页面没有找到|找不到页面|页面不存在|^Unknown$|^Bad Request$'
 saveCookie = False
 cookie = ''
 searchCount = -1
 googleWhat = ''
 ofile = sys.stdout
+notFoundInfo = u'Page Not Found|页面没有找到|找不到页面|页面不存在|^Unknown$|^Bad Request$'
 
 def log(str):
 	str += '\n'
@@ -46,71 +50,19 @@ def log(str):
 	if ofile != sys.stdout:
 		sys.stdout.write(str)
 
-class Tester:
-	def scan(self, url, scaner):
-		return False
-
-results = [
-	"<b>Fatal error</b>:", 
-	"^Access Denied$",
-	"Microsoft OLE DB Provider", 
-	"You have an error in your SQL syntax", 
-	r'ERROR [0-9]+?:', 
-	"Forbidden", 
-];
-
-#import pdb
-class SimpleTester(Tester):
-	def scan(self, url, scanner):
-		#print 'SimpleTester.scan:', url
-		#pdb.set_trace()
-		req = urllib2.Request(url)
-		response = scanner.sendReq(req)
-		if response == None:
-			return False
-		#print response
-		try:
-			if type(response) == types.StringType:
-				respText = response
-			else:
-				if response.geturl() != url and response.geturl() != url + '/':
-					# print "REDIRECTED: ", response.geturl(), url
-					return False
-				respText = response.read()
-			#print respText
-			if respText[:3] == codecs.BOM_UTF8:
-				respText = respText[3:]
-			try:
-				respText = respText.decode('utf8')
-			except:
-				pass
-
-			if checkAll:
-				#pdb.set_trace()
-				if not re.search(notFoundInfo, respText, re.IGNORECASE):
-					scanner.report(url, respText[:512])
-					return True
-				else:
-					#pdb.set_trace()
-				 	return False
-
-			for p in results:
-				if re.search(p , respText, re.IGNORECASE):
-					scanner.report(url, respText[:512])
-					return True
-		except:
-			raise
-			pass
-		return False
-
 class Scanner:
 	_opener = None	
-	_testers = ()
+	_testers = []
 	_progress = False
 	_user_agent = 'Firefox'
+
 	def __init__(self):
 		pass
-	
+
+	@staticmethod
+	def log(s):
+		log(s)
+
 	def report(self, url, msg):
 		if self._progress:
 			sys.stdout.write('\n')
@@ -120,6 +72,18 @@ class Scanner:
 		log('[MESSAGE]')
 		log(msg)
 		log('=' * 60)
+
+	@staticmethod
+	def isNotFoundPage(html):
+		return re.search(notFoundInfo, html, re.IGNORECASE) != None
+
+	@staticmethod
+	def isCheckAll():
+		return checkAll
+
+	@staticmethod
+	def isVerbose():
+		return verbose
 
 	def sendReq(self, request, data = None, cookie = '', timeout = 15):
 		webutils.setupRequest(request)
@@ -163,16 +127,6 @@ class Scanner:
 			self._progress = True
 
 	def scan(self):
-		#pdb.set_trace()
-		# print '=' * 60
-		#"""
-		#ck = cookielib.Cookie(version=0, name='Name', value='1', port=None, 
-		#		port_specified=False, domain='www.example.com', domain_specified=False, 
-		#		domain_initial_dot=False, path='/', path_specified=True, secure=False, 
-		#		expires=None, discard=True, comment=None, comment_url=None, 
-		#		rest={'HttpOnly': None}, rfc2109=False)
-		#cj.set_cookie(ck)
-		#"""
 		self._opener = urllib2.build_opener()
 		webutils.setupOpener(self._opener)
 
@@ -183,10 +137,9 @@ class Scanner:
 	
 class ListScanner(Scanner):
 	
-	def __init__(self, hostRoot, fileName, testers = (SimpleTester(), ) ):
+	def __init__(self, hostRoot, fileName):
 		self._hostRoot = hostRoot
 		self._fileName = fileName
-		self._testers = testers
 		
 	def getUrls(self):
 		for uri in open(self._fileName).readlines():
@@ -200,8 +153,7 @@ class ListScanner(Scanner):
 
 from utils import crawler
 class CrawlerScanner(Scanner):
-	def __init__(self, startUrl, testers = [SimpleTester()]):
-		self._testers = testers
+	def __init__(self, startUrl):
 		self._startUrl = startUrl
 		
 	def getUrls(self):
@@ -211,196 +163,22 @@ class CrawlerScanner(Scanner):
 
 from utils import google
 class GoogleScanner(Scanner):
-	def __init__(self, hostRoot, testers = (SimpleTester(), ) ):
-		self._hostRoot = hostRoot
-		self._testers = testers
+	def __init__(self, keyword):
+		self._keyword = keyword
 	
 	def getUrls(self):
-		gen = google.google(self._opener, 'site:%s %s' % (self._hostRoot, googleWhat), 
-				searchCount)
+		gen = google.google(self._opener, self._keyword, searchCount)
 		for url in gen:
 			yield url
 
-#####################################################################
-# vulnerability testers
-"""
-http://bbs.drvsky.com/read.php?tid[]=2679
-Fatal error: Unsupported operand types in /home/wwwroot/drvsky/require/guestfunc.php on line 23
-"""
-# look like it's no effection now
-class PhpArrayExposePathTester(Tester):
-	def scan(self, url, scaner):
-		urlP = urlparse.urlparse(url)
-		if re.search(r'\.php$', urlP.path, re.IGNORECASE):
-			if url.find('=') != -1:
-				url = url.replace('=', '[]=')
-				#print url
-
-				req = urllib2.Request(url)
-				response = scanner.sendReq(req)
-				if response == None:
-					return False
-				try:
-					respText = response.read()
-				except:
-					return False
-				try:
-					if respText[:3] == codecs.BOM_UTF8:
-						respText = respText[3:]
-					respText = respText.decode('utf8')
-				except Exception, e:
-					pass
-				
-				if checkAll:
-					scanner.report(url, respText[:512])
-					return True
-
-				if re.search('Fatal error', respText):
-					scanner.report(url, respText[:512])
-					return True
-		return False
-
-class SqlInjectionTester(Tester):
-	def scan(self, url, scaner):
-		pass
-
-# /DZ/Data/BACKUP~1/141010~1.SQL OR /DZ/DATA/BACKUP/???.SQL
-# guess by date     ~~~~~~~~
-# it's effective in winnt
-class DZBackupTester(Tester): # FIXME: change to Scanner, not Tester
-	def scan(self, url, scanner):
-		pass # TODO:
-
-# .git | .svn | .file.swp(vim) | file.bak | dir.rar(zip tar tar.gz tar.bz2 tgz tbz)
-class HiddenFileTester(Tester):
-	_pathRec = set()
-	_textExts = ('entries', 'config', '.bak', '.swp', 
-			'.html', '.htm', '.php', '.jsp', '.asp', '.aspx', '.txt')
-
-	def isBinFileType(self, url):
-		for ext in self._textExts:
-			if url[-len(ext):] == ext:
-				return False
-		return True
-
-	def isPrintableText(self, content):
-		for c in content:
-			if not c in string.printable:
-				return False
-		return True
-
-	def scanUrl(self, url):
-		if verbose:
-			log('  ->' + url)
-		req = urllib2.Request(url)
-		response = scanner.sendReq(req)
-		if response == None:
-			return False
-		# print type(response)
-		if type(response) == types.StringType:
-			respText = response
-		else:
-			try:
-				if response.geturl() != url and response.geturl() != url + '/':
-					# jumped, ignore?
-					#print response.geturl(), url
-					return False
-				respText = response.read()
-			except:
-				return False			
-		try:
-			if respText[:3] == codecs.BOM_UTF8:
-				respText = respText[3:]
-			respText = respText.decode('utf8')
-		except Exception, e:
-			pass
-		if self.isBinFileType(url) and self.isPrintableText(respText[:32]):
-			return False
-
-		if not re.search(notFoundInfo, respText, re.IGNORECASE):
-			scanner.report(url, respText[:512])
-			return True
-
-		return False
-
-	_dirs = ('.svn/entries', '.git/config', 
-			'backup.zip', 'backup.rar', 'backup.tar.gz', 'backup.tar.bz2', 
-			'backup.tgz', 'backup.tbz', 'backup.tar', 'backup.7z')
-	
-	def scanFixed(self, path, scanner):
-		for dir in self._dirs:
-			url = path + dir
-			self.scanUrl(url)
-	
-	_ignoreExts = ('.html', '.htm', '.css', '.pdf')
-
-	def isIgnoreFileType(self, url):
-		for ext in self._ignoreExts:
-			if url[-len(ext):] == ext:
-				return True
-		return False
-
-	def scanDynamic(self, path, file, scanner):
-		urlP = urlparse.urlparse(file)
-		try:
-			pathItems = os.path.split(urlP.path)
-		except:
-			return
-		#print pathItems
-		path2 = path[:-1]; # no last '/'
-		curdir = pathItems[0][pathItems[0].rfind('/') + 1 :]
-		#print "curdir = " + curdir
-		#print path, path2, curdir
-
-		# ignore '.htm', '.html', ...
-		if file[-1:] != '/' and not self.isIgnoreFileType(file):
-			# http://www.xxx.com/file.php.bak
-			files = [path + '.' + pathItems[1] + '.swp', 
-				path + pathItems[1] + '.bak', file + '2', 			
-				file + '.zip', file + '.rar', file + '.tar.gz', 
-				file + '.tar.bz2', file + '.tgz', file + '.tbz', 
-				file + '.tar', file + '.7z']
-		else:
-			files = []
-
-		if len(curdir) > 0:
-			files.extend((
-				# http://www.xxx.com/dir.zip
-				path2 + '.zip', path2 + '.rar', path2 + '.tar.gz', 
-				path2 + '.tar.bz2', path2 + '.tgz', path2 + '.tbz', 
-				path2 + '.tar', path2 + '.7z', 
-
-				# http//www.xxx.com/dir/ + dir + '.zip' 
-				path + curdir + '.zip', path + curdir + '.rar', path + curdir + '.tar.gz', 
-				path + curdir + '.tar.bz2', path + curdir + '.tgz', path + curdir + '.tbz', 
-				path + curdir + '.tar', path + curdir + '.7z', ))
-
-		for url in files:
-			self.scanUrl(url)
-		
-	def scan(self, url, scanner):
-		#print '*** ' + url
-		urlP = urlparse.urlparse(url)
-		if urlP.path == '':
-			url += '/'
-		urlP = urlparse.urlparse(url)
-		# pathItems = urlP.path.split('/')
-		#pathItems = os.path.split(urlP.path)
-		if len(urlP.fragment) > 0:
-			url = url[:url.find('#')]
-
-		if len(urlP.query) <= 0:
-			file = url
-		else:
-			file = url[:url.rfind('?')]
-		path = url[:url.rfind(r'/') + 1]
-		
-		if not path in self._pathRec:
-			self._pathRec.add(path)
-			self.scanFixed(path, scanner)
-		#req = urllib2.Request(url)
-		#if file != path:
-		self.scanDynamic(path, file, scanner)
+def loadTester(scanner, names):
+	mods = []
+	for name in names:
+		m = importlib.import_module('tester.' + name)
+		if m == None:
+			print 'cannot load tester: ' + name
+			sys.exit(-1)
+		scanner._testers.append(m)
 
 #####################################################################
 
@@ -415,8 +193,8 @@ if __name__ == "__main__":
 		-f config file. default ./config
 		-h show help message
 		-k <cookie>	set cookie
-		-n <keyword> filter out the keyword
-		-N <keyword> extra filter
+		-n <keyword> 'page not found' filter
+		-N <keyword> extra 'page not found' filter
 		-o output file
 		-p <search result count>  default 100
 		-s save cookie
@@ -429,11 +207,13 @@ if __name__ == "__main__":
 	reload(sys)
 	sys.setdefaultencoding(locale.getpreferredencoding())
 
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:n:N:o:st:vw:")
+	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:m:n:N:o:st:vw:")
 	#print opts
 	#print args
 
 	outfile = ''
+	testerMods = ''
+
 	for op, value in opts:
 		if op == '-a':
 			checkAll = True
@@ -443,12 +223,14 @@ if __name__ == "__main__":
 			results.append(value)	
 		elif op == "-f":
 			config = value
-		elif op == '-g':
-			googleWhat = value
+		#elif op == '-g':
+		#	googleWhat = value
 		elif op == "-h":
 			usage()
 		elif op == '-k':
 			cookie = value
+		elif op == '-m':
+			testerMods = value
 		elif op == '-n':
 			notFoundInfo = value.decode(locale.getpreferredencoding())
 		elif op == '-N':
@@ -479,12 +261,13 @@ if __name__ == "__main__":
 		usage()
 		sys.exit(0)
 
-	urlRoot = args[0]
-
-	if not re.search(r'^http://', urlRoot, re.IGNORECASE):
-		urlRoot = 'http://' + urlRoot
-
 	if scanType == 0:
+		if testerMods == '':
+			testerMods = 'simple'
+		urlRoot = args[0]
+		if not re.search(r'^http://', urlRoot, re.IGNORECASE):
+			urlRoot = 'http://' + urlRoot
+
 		checkAll = True
 		if os.path.isdir(config):
 			if config[-1] != '/':
@@ -494,17 +277,29 @@ if __name__ == "__main__":
 				if re.search('\.txt$', path, re.IGNORECASE):
 					log('List scanning: [' + urlRoot + " " + config + path + ']')
 					scanner = ListScanner(urlRoot, config + path)
+					loadTester(scanner, testerMods.split(','))
 					scanner.scan()
 		else:
 			scanner = ListScanner(urlRoot, config)
+			loadTester(scanner, testerMods.split(','))
 			scanner.scan()
 
 	elif scanType == 1:
-		scanner = CrawlerScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
+		if testerMods == '':
+			testerMods = 'hidden,php_array'
+		urlRoot = args[0]
+		if not re.search(r'^http://', urlRoot, re.IGNORECASE):
+			urlRoot = 'http://' + urlRoot
+
+		scanner = CrawlerScanner(urlRoot)
+		loadTester(scanner, testerMods.split(','))
 		scanner.scan()
 	elif scanType == 2:
-		urlP= urlparse.urlparse(urlRoot)
-		urlRoot = urlP.hostname
-		scanner = GoogleScanner(urlRoot, (HiddenFileTester(), PhpArrayExposePathTester(), ))
+		if testerMods == '':
+			testerMods = 'hidden,php_array'
+
+		keyword = args[0]
+		scanner = GoogleScanner(keyword)
+		loadTester(scanner, testerMods.split(','))
 		scanner.scan()
 
