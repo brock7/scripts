@@ -60,7 +60,7 @@ def _urlFilter(url):
 		return False
 	return True
 
-pattern = re.compile(r'<div class="MSR">About&nbsp;([0-9]+)&nbsp;results</div>')
+pattern = re.compile(r'About&nbsp;([0-9,]+)&nbsp;results</div>')
 pattern2 = re.compile(r'Your search for ".*?" returned no results')
 
 def _updateTotalRecord(html):
