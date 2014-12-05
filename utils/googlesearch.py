@@ -6,14 +6,15 @@ import re
 import webutils
 import sys
 
-AOL_SEARCH_URL = 'http://search.aol.com/aol/search?s_it=topsearchbox.search&v_t=na&page=%d&q=%s'
+GOOGLE_HOME = 'http://64.233.161.104'
+GOOGLE_SEARCH_URL = GOOGLE_HOME+ '/search?start=%d&q=%s'
 REQ_TIMEOUT = 15
 NUM_PER_PAGE = 10
 reqDelay = 0.0
 #maxResult = 10
 totalRecord = sys.maxint
 
-def _aolSearchPageHandler(opener, url):
+def _googleSearchPageHandler(opener, url):
 	#print url
 	#response = opener.open(url, data = None, timeout = 10)
 	req = urllib2.Request(url)
@@ -56,7 +57,13 @@ def _urlFilter(url):
 		return False
 	if url.find('google.com') != -1:
 		return False
+	if url.find('.googleusercontent.com') != -1:
+		return False
 	if url.find('.aol.com') != -1:
+		return False
+	if url.find('.youtube.com') != -1:
+		return False
+	if url.find(GOOGLE_HOME) != -1:
 		return False
 	return True
 
@@ -97,7 +104,7 @@ def _makeCookie(name, value):
 		comment_url = None,
 		rest = None)
 
-def _aolSearch(opener, what, resultNum = -1, startNum = 0):
+def _googleSearch(opener, what, resultNum = -1, startNum = 0):
 	
 	what = urllib2.quote(what)
 	if resultNum == -1:
@@ -118,10 +125,10 @@ def _aolSearch(opener, what, resultNum = -1, startNum = 0):
 			if pageNum > pageCount:
 				break
 
-		url = AOL_SEARCH_URL % ((startPage + pageNum) , what)
+		url = GOOGLE_SEARCH_URL % ((startPage + pageNum - 1) * 10 , what)
 		#print url
 		# i = 0
-		for result in _aolSearchPageHandler(opener, url):
+		for result in _googleSearchPageHandler(opener, url):
 			# i += 1
 			resCnt += 1
 			yield result
@@ -145,7 +152,7 @@ def _aolSearch(opener, what, resultNum = -1, startNum = 0):
 		if reqDelay > 0:
 		 	time.sleep(reqDelay)
 
-google = _aolSearch
+google = _googleSearch
 
 if __name__ == '__main__':
 	opener = urllib2.build_opener() 

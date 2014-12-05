@@ -161,7 +161,10 @@ def _gfsosoSearch(opener, what, resultNum = -1, startNum = 0):
 				raise StopIteration()
 
 		if totalRecord == sys.maxint:
-			totalRecord = resultNum			
+			if resultNum == -1:
+				totalRecord = sys.maxint - 1
+			else:
+				totalRecord = resultNum			
 
 		if resCnt >= totalRecord:
 			raise StopIteration()
