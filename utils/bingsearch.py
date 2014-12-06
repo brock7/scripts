@@ -10,8 +10,8 @@ import locale
 #reload(sys)
 #sys.setdefaultencoding(locale.getpreferredencoding())
 
-BING_HOME = 'http://64.233.161.104'
-BING_SEARCH_URL = BING_HOME+ '/search?hl=en_US&start=%d&q=%s'
+BING_HOME = 'http://cn.bing.com'
+BING_SEARCH_URL = BING_HOME+ '/search?first=%d&q=%s'
 REQ_TIMEOUT = 15
 NUM_PER_PAGE = 10
 reqDelay = 0.0
@@ -36,7 +36,7 @@ def _bingSearchPageHandler(opener, url):
 		_updateTotalRecord(html)
 	#print html
 	tree = etree.HTML(html)
-	nodes = tree.xpath(r'//a/@href')
+	nodes = tree.xpath(r'//a[@target]/@href')
 	#print "node count: ", len(nodes), " html len: ", len(html)
 	for node in nodes:
 		#print node
