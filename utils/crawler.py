@@ -8,7 +8,7 @@ class Crawler(object):
 	_linkList = set()
 	_reexp = re.compile(r"""<a[^>]*?href\s*=\s*['"]?([^'"\s>]{1,500})['">\s]""", 
 				re.I | re.M | re.S)
-	_scope = '.*'
+	_scope = ''
 
 	def adjustUrl(self, refer, url):
 		if re.search(r'^\/\/', url):
