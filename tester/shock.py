@@ -33,7 +33,7 @@ def testBashShock1(url):
 			if response.info().getheader('root'):
 				print
 				print 'PANIC!!!'
-				print
+				print '******* ' + url
 				print 'root:' + response.info().getheader('root')
 				return True
 			#for k, v in response.info().items():
@@ -60,6 +60,7 @@ def testBashShock2(url):
 		if t2 >= 12 and t2 < 30:
 			print
 			print 'PANIC!!!'
+			print '******* ' + url
 			print
 			return True
 	except Exception, e:

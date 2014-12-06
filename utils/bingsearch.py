@@ -65,7 +65,9 @@ def _urlFilter(url):
 		return False
 	if url.find('.googleusercontent.com') != -1:
 		return False
-	if url.find('.aol.com') != -1:
+	if url.find('.microsofttranslator.com') != -1:
+		return False
+	if url.find('onlinehelp.microsoft.com') != -1:
 		return False
 	if url.find('.youtube.com') != -1:
 		return False
@@ -159,7 +161,7 @@ def _bingSearch(opener, what, resultNum = -1, startNum = 0):
 		if reqDelay > 0:
 		 	time.sleep(reqDelay)
 
-bing = _bingSearch
+google = _bingSearch
 
 if __name__ == '__main__':
 	opener = urllib2.build_opener() 
