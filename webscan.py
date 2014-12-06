@@ -151,6 +151,12 @@ class ListScanner(Scanner):
 			url = self._hostRoot + uri
 			yield url
 
+class SingleScanner(Scanner):
+	def __init__(self, url):
+		self._url = url
+	def getUrls(self):
+		yield self._url
+
 from utils import crawler
 class CrawlerScanner(Scanner):
 	def __init__(self, startUrl):
@@ -198,7 +204,7 @@ if __name__ == "__main__":
 		-o output file
 		-p <search result count>  default 100
 		-s save cookie
-		-t <scanType> 0 list, 1 crawler, 2 google. default 0
+		-t <scanType> 0 list, 1 crawler, 2 google, 3 url. default 0
 		-v verbose
 		-w wait time."""	
 		print helpMsg 
@@ -290,16 +296,21 @@ if __name__ == "__main__":
 		urlRoot = args[0]
 		if not re.search(r'^http://', urlRoot, re.IGNORECASE):
 			urlRoot = 'http://' + urlRoot
-
 		scanner = CrawlerScanner(urlRoot)
 		loadTester(scanner, testerMods.split(','))
 		scanner.scan()
 	elif scanType == 2:
 		if testerMods == '':
 			testerMods = 'hidden,php_array'
-
 		keyword = args[0]
 		scanner = GoogleScanner(keyword)
+		loadTester(scanner, testerMods.split(','))
+		scanner.scan()
+	elif scanType == 3:
+		if testerMods == '':
+			testerMods = 'hidden,php_array'
+		url = args[0]
+		scanner = SingleScanner(url)
 		loadTester(scanner, testerMods.split(','))
 		scanner.scan()
 
