@@ -27,9 +27,9 @@ def SendHTTPRequest(strMethod,strScheme,strHost,strURL,strParam):
 		time2=0 
 		time1=time.time() * 1000 
 		if strScheme.upper()=="HTTPS":
-			con2 = httplib.HTTPSConnection(strHost) 
+			con2 = httplib.HTTPSConnection(strHost, timeout = 15) 
 		else: 
-			con2 = httplib.HTTPConnection(strHost) 
+			con2 = httplib.HTTPConnection(strHost, timeout = 15) 
 			 
 		if strMethod.upper()=="POST": 
 			con2.request(method="POST",url= strURL, body=strParam, headers=headers) 

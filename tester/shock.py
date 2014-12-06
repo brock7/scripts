@@ -28,7 +28,7 @@ def testBashShock1(url):
 	req.add_header('X-Forwarded-For',  EXPLOIT1)
 	#print '******* ' + url + ' *******'
 	try:
-		response = opener.open(req)
+		response = opener.open(req, timeout = 15)
 		if response:
 			if response.info().getheader('root'):
 				print
