@@ -7,7 +7,7 @@ import webutils
 import sys
 
 GOOGLE_HOME = 'http://64.233.161.104'
-GOOGLE_SEARCH_URL = GOOGLE_HOME+ '/search?start=%d&q=%s'
+GOOGLE_SEARCH_URL = GOOGLE_HOME+ '/search?hl=en_US&start=%d&q=%s'
 REQ_TIMEOUT = 15
 NUM_PER_PAGE = 10
 reqDelay = 0.0
@@ -67,7 +67,8 @@ def _urlFilter(url):
 		return False
 	return True
 
-pattern = re.compile(r'About&nbsp;([0-9,]+)&nbsp;results</div>')
+pattern = re.compile(r'About ([0-9,]+) results<nobr>')
+#pattern = re.compile(r'找到约 ([0-9,]+) 条结果'.encode('utf-8'))
 pattern2 = re.compile(r'Your search for ".*?" returned no results')
 
 def _updateTotalRecord(html):
@@ -75,15 +76,15 @@ def _updateTotalRecord(html):
 	m = pattern2.search(html)
 	if m != None:
 		totalRecord = 0	
-		print 'not found'
+		print '* Not found'
 		return
 	m = pattern.search(html)
 	if m == None:
 		return
 	if len(m.groups()) <= 0:
 		return
-	totalRecord = int(m.group(1))
-	print 'totalRecord', totalRecord
+	totalRecord = int(m.group(1).replace(',', ''))
+	print '* Total:', totalRecord
 
 def _makeCookie(name, value):
 	return cookielib.Cookie(
@@ -157,6 +158,6 @@ google = _googleSearch
 if __name__ == '__main__':
 	opener = urllib2.build_opener() 
 	webutils.setupOpener(opener)
-	for url in google(opener, 'site:letv.com'):
+	for url in google(opener, 'site:letv.com', 10):
 		print url
 

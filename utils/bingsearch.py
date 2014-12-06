@@ -5,15 +5,20 @@ from lxml import etree
 import re
 import webutils
 import sys
+import locale
 
-AOL_SEARCH_URL = 'http://search.aol.com/aol/search?s_it=topsearchbox.search&v_t=na&page=%d&q=%s'
+#reload(sys)
+#sys.setdefaultencoding(locale.getpreferredencoding())
+
+BING_HOME = 'http://64.233.161.104'
+BING_SEARCH_URL = BING_HOME+ '/search?hl=en_US&start=%d&q=%s'
 REQ_TIMEOUT = 15
 NUM_PER_PAGE = 10
 reqDelay = 0.0
 #maxResult = 10
 totalRecord = sys.maxint
 
-def _aolSearchPageHandler(opener, url):
+def _bingSearchPageHandler(opener, url):
 	#print url
 	#response = opener.open(url, data = None, timeout = 10)
 	req = urllib2.Request(url)
@@ -54,13 +59,22 @@ def _refreshCookie(opener, what):
 def _urlFilter(url):
 	if url.find('http:') == -1 and url.find('ftp:') == -1 and url.find('https:') == -1:
 		return False
+	if url.find('bing.com') != -1:
+		return False
 	if url.find('google.com') != -1:
+		return False
+	if url.find('.googleusercontent.com') != -1:
 		return False
 	if url.find('.aol.com') != -1:
 		return False
+	if url.find('.youtube.com') != -1:
+		return False
+	if url.find(BING_HOME) != -1:
+		return False
 	return True
 
-pattern = re.compile(r'About&nbsp;([0-9,]+)&nbsp;results</div>')
+#pattern = re.compile(r'About ([0-9,]+) results<nobr>')
+pattern = re.compile(r'([0-9,]+) 条结果</span>')
 pattern2 = re.compile(r'Your search for ".*?" returned no results')
 
 def _updateTotalRecord(html):
@@ -76,7 +90,7 @@ def _updateTotalRecord(html):
 	if len(m.groups()) <= 0:
 		return
 	totalRecord = int(m.group(1).replace(',', ''))
-	print '* Total: ', totalRecord
+	print '* Total:', totalRecord
 
 def _makeCookie(name, value):
 	return cookielib.Cookie(
@@ -97,7 +111,7 @@ def _makeCookie(name, value):
 		comment_url = None,
 		rest = None)
 
-def _aolSearch(opener, what, resultNum = -1, startNum = 0):
+def _bingSearch(opener, what, resultNum = -1, startNum = 0):
 	
 	what = urllib2.quote(what)
 	if resultNum == -1:
@@ -118,10 +132,10 @@ def _aolSearch(opener, what, resultNum = -1, startNum = 0):
 			if pageNum > pageCount:
 				break
 
-		url = AOL_SEARCH_URL % ((startPage + pageNum) , what)
+		url = BING_SEARCH_URL % ((startPage + pageNum - 1) * 10 , what)
 		#print url
 		# i = 0
-		for result in _aolSearchPageHandler(opener, url):
+		for result in _bingSearchPageHandler(opener, url):
 			# i += 1
 			resCnt += 1
 			yield result
@@ -145,11 +159,11 @@ def _aolSearch(opener, what, resultNum = -1, startNum = 0):
 		if reqDelay > 0:
 		 	time.sleep(reqDelay)
 
-google = _aolSearch
+bing = _bingSearch
 
 if __name__ == '__main__':
 	opener = urllib2.build_opener() 
 	webutils.setupOpener(opener)
-	for url in google(opener, 'site:letv.com', 10):
+	for url in bing(opener, 'site:letv.com', 10):
 		print url
 

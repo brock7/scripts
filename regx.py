@@ -14,7 +14,7 @@ for line in sys.stdin:
 if len(text) <= 0:
 	sys.exit(0)
 
-nodes = re.findall(sys.argv[1], text)
+nodes = re.findall(sys.argv[1].encode('utf-8'), text)
 for node in nodes:
 	print node
 

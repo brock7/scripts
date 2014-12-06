@@ -1,6 +1,8 @@
 import gfsoso
 import aolsearch
+import googlesearch
 
 #google = gfsoso.google
-google = aolsearch.google
-
+#google = googlesearch
+searchEngine = aolsearch.google
+google = searchEngine
