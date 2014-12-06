@@ -119,6 +119,24 @@ def queryWhois(domain):
 def nmap(domain):
 	os.system('nmap -sV %s' % domain)
 
+def baseInfo(domain):
+	req = urllib2.Request('http://' + domain)
+	req.add_header('Proxy-Connection', 'Keep-Alive')
+	req.add_header('Accept', '*/*')
+	req.add_header('User-Agent', ' Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0')
+	try:
+		response = urllib2.urlopen(req, timeout = 15)
+		#html = response.read()
+		#for k, v in response.info().items():
+		#	print k,v 
+		if response.info().getheader('Server'):
+			print 'Server: ' + response.info().getheader('Server')
+
+		if response.info().getheader('X-Powered-By'):
+			print 'Powered By: ' + response.info().getheader('X-Powered-By')
+	except:
+		pass
+
 if __name__ == '__main__':
 	import locale	
 	reload(sys)
@@ -142,6 +160,8 @@ if __name__ == '__main__':
 
 	if options == 0:
 		options = 1 | 2 | 4 | 8
+	
+	baseInfo(args[0])
 
 	if options & 1:
 		print '\n============================== reverse dns ==============================\n'
