@@ -34,7 +34,7 @@ def scan(url, scanner):
 				# respText = respText.decode('utf8')
 			except Exception, e:
 				print e
-				pass
+				#raise
 			
 			if scanner.isCheckAll():
 				scanner.report(url, respText[:512])

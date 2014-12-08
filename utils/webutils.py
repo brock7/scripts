@@ -6,6 +6,7 @@ import urllib2
 import cookielib
 import re
 from lxml import etree
+import types
 
 userAgents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', 
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', 
@@ -154,11 +155,16 @@ def getCharset(text):
 	tree = etree.HTML(text)
 	node = tree.xpath('/html/head/meta[1]/@content')
 	if node:
-		m = re.search('charset=([^ \"\'>]*)', text)
+		#print node
+		if type(node) == types.ListType:
+			node = node[0]
+		m = re.search('charset=([^ \"\'>]*)', node)
 		if m:
 			return m.group(1)
 	node = tree.xpath('/html/head/meta[1]/@charset')
 	if node:
+		if type(node) == types.ListType:
+			return node[0]
 		return node
 	return 'utf-8'
 
