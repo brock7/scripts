@@ -85,6 +85,15 @@ class Scanner:
 	def isVerbose():
 		return verbose
 
+	@staticmethod
+	def getCookie():
+		return cookie
+	
+	@staticmethod
+	def setupCookie(req):
+		if len(cookie) > 0:
+			request.add_header('Cookie', cookie)
+
 	def sendReq(self, request, data = None, cookie = '', timeout = 15):
 		webutils.setupRequest(request)
 		if len(cookie) > 0:
