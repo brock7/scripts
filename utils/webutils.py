@@ -4,6 +4,8 @@ import random
 import os
 import urllib2
 import cookielib
+import re
+from lxml import etree
 
 userAgents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', 
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', 
@@ -147,4 +149,23 @@ def captrueHtml(text):
 
 def escapeHtml(text):
 	return text.replace("&amp;", "&").replace("&quot;", '"').replace("&lt;", "<").replace("&gt;", ">")
+
+def getCharset(text):
+	tree = etree.HTML(text)
+	node = tree.xpath('/html/head/meta[1]/@content')
+	if node:
+		m = re.search('charset=([^ \"\'>]*)', text)
+		if m:
+			return m.group(1)
+	node = tree.xpath('/html/head/meta[1]/@charset')
+	if node:
+		return node
+	return 'utf-8'
+
+def decodeHtml(text):
+	charset = getCharset(text)
+	#print 'charset:', charset
+	if len(charset) <= 0:
+		charset = 'utf-8'
+	return text.decode(charset)
 

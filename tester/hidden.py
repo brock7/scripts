@@ -44,9 +44,10 @@ class HiddenFileTester:
 			except:
 				return False			
 		try:
+			respText = webutils.decodeHtml(respText)
 			if respText[:3] == codecs.BOM_UTF8:
 				respText = respText[3:]
-			respText = respText.decode('utf8')
+			#respText = respText.decode('utf8')
 		except Exception, e:
 			pass
 		if self.isBinFileType(url) and self.isPrintableText(respText[:32]):

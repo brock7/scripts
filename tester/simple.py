@@ -2,6 +2,7 @@ import urllib2
 import re
 import types
 import codecs
+from utils import webutils
 
 results = [
 	"<b>Fatal error</b>:", 
@@ -28,13 +29,10 @@ def scan(url, scanner):
 				# print "REDIRECTED: ", response.geturl(), url
 				return False
 			respText = response.read()
+		respText = webutils.decodeHtml(respText)
 		#print respText
 		if respText[:3] == codecs.BOM_UTF8:
 			respText = respText[3:]
-		try:
-			respText = respText.decode('utf8')
-		except:
-			pass
 
 		if scanner.isCheckAll():
 			#pdb.set_trace()

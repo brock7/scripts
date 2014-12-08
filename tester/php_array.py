@@ -1,6 +1,9 @@
 import urllib2
 import re
 import urlparse
+from utils import webutils
+from lxml import etree
+import codecs
 
 #####################################################################
 # vulnerability testers
@@ -25,10 +28,12 @@ def scan(url, scanner):
 			except:
 				return False
 			try:
+				respText = webutils.decodeHtml(respText)
 				if respText[:3] == codecs.BOM_UTF8:
 					respText = respText[3:]
-				respText = respText.decode('utf8')
+				# respText = respText.decode('utf8')
 			except Exception, e:
+				print e
 				pass
 			
 			if scanner.isCheckAll():

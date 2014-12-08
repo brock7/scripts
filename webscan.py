@@ -222,7 +222,7 @@ if __name__ == "__main__":
 	reload(sys)
 	sys.setdefaultencoding(locale.getpreferredencoding())
 
-	opts, args = getopt.getopt(sys.argv[1:], "ad:e:f:hk:m:n:N:o:st:vw:")
+	opts, args = getopt.getopt(sys.argv[1:], "aAd:e:f:hk:m:n:N:o:st:vw:")
 	#print opts
 	#print args
 
@@ -232,6 +232,8 @@ if __name__ == "__main__":
 	for op, value in opts:
 		if op == '-a':
 			checkAll = True
+		if op == '-A':
+			checkAll = False
 		elif op == '-d':
 			scanDepth = int(value)
 		elif op == "-e":
