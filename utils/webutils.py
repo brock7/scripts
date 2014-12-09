@@ -7,6 +7,7 @@ import cookielib
 import re
 from lxml import etree
 import types
+import time
 
 userAgents = ['Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0', 
 	'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0', 
@@ -174,4 +175,15 @@ def decodeHtml(text):
 	if len(charset) <= 0:
 		charset = 'utf-8'
 	return text.decode(charset)
+
+def measureRequest(opener, req, timeo = 15):
+	t1 = time.time()
+	response = None
+	try:
+		response = opener.open(req, timeout = timeo)
+		t2 = time.time() - t1
+	except Exception, e:
+		t2 = time.time() - t1
+		response = str(e)
+	return response, t2
 

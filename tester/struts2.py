@@ -69,10 +69,10 @@ def RunTests(strURL):
 	strURL1 = t_url.path 
 	print "Checking " + strURL 
 	if RunTest2(strScheme,strHost,strURL1): 
-		print "Vulnerable! T2[echo] " + strURL 
+		print "[Struts2] Vulnerable! T2[echo] " + strURL 
 		return True 
 	elif RunTest1(strScheme,strHost,strURL1): 
-		print "Vulnerable! T1[timing] " + strURL  
+		print "[Struts2] Vulnerable! T1[timing] " + strURL  
 		return True 
 	else: 
 		print "Secure." 
