@@ -139,8 +139,11 @@ class Scanner:
 		self._opener = urllib2.build_opener()
 		webutils.setupOpener(self._opener)
 
+		#records = set()
 		urls = self.getUrls()
 		for url in urls:
+			#if not url in records:
+			#	records.add(url)
 			self.scanUrl(url)
 		return True
 	

