@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import difflib, httplib, itertools, optparse, random, re, urllib, urllib2, urlparse
+import os, difflib, httplib, itertools, optparse, random, re, urllib, urllib2, urlparse
 
 NAME    = "Damn Small SQLi Scanner (DSSS) < 100 LoC (Lines of Code)"
 VERSION = "0.2n"
@@ -82,7 +82,10 @@ def init_options(proxy=None, cookie=None, ua=None, referer=None):
     urllib2.install_opener(urllib2.build_opener(urllib2.ProxyHandler({'http': proxy})) if proxy else None)
 
 def scan(url, scanner):
-	scan_page(url)
+	headers = scanner.getHeaders()
+	init_options(proxy = os.environ.get('http_proxy'), cookie = headers.get('Cookie'), 
+			ua = headers.get('User-Agent'), referer = headers.get('Referer'))
+	scan_page(url, scanner.getData())
 
 if __name__ == "__main__":
     print "%s #v%s\n by: %s\n" % (NAME, VERSION, AUTHOR)

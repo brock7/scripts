@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import cookielib, optparse, random, re, string, urllib, urllib2, urlparse
+import os, cookielib, optparse, random, re, string, urllib, urllib2, urlparse
 
 NAME    = "Damn Small XSS Scanner (DSXS) < 100 LoC (Lines of Code)"
 VERSION = "0.1q"
@@ -75,8 +75,11 @@ def scan_page(url, data=None):
         print "\r (x) Ctrl-C pressed"
     return retval
 
-def scan(url, opener):
-	scan_page(url)
+def scan(url, scanner):
+	headers = scanner.getHeaders()
+	init_options(proxy = os.environ.get('http_proxy'), cookie = headers.get('Cookie'), 
+			ua = headers.get('User-Agent'), referer = headers.get('Referer'))
+	scan_page(url, scanner.getData())
 
 def init_options(proxy=None, cookie=None, ua=None, referer=None):
     global _headers

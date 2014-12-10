@@ -37,8 +37,8 @@ def setupOpener(opener):
 		opener.add_handler(urllib2.HTTPCookieProcessor(cookieJar))
 
 	if os.environ.has_key('http_proxy'):
-		prx = os.environ['http_proxy'].split(':');
-		opener.add_handler(urllib2.ProxyHandler({prx[0]: prx[1]}))
+		prx = os.environ['http_proxy']
+		opener.add_handler(urllib2.ProxyHandler({'http': prx}))
 		
 topurlPostfix = (
 	'.com','.la','.io',

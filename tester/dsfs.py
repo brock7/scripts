@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import itertools, optparse, random, re, urllib, urllib2
+import os, itertools, optparse, random, re, urllib, urllib2
 
 NAME    = "Damn Small FI Scanner (DSFS) < 100 LoC (Lines of Code)"
 VERSION = "0.1c"
@@ -74,8 +74,11 @@ def init_options(proxy=None, cookie=None, ua=None, referer=None):
     _headers = dict(filter(lambda _: _[1], ((COOKIE, cookie), (UA, ua or NAME), (REFERER, referer))))
     urllib2.install_opener(urllib2.build_opener(urllib2.ProxyHandler({'http': proxy})) if proxy else None)
 
-def scan(url, opener):
-	scan_page(url)
+def scan(url, scanner):
+	headers = scanner.getHeaders()
+	init_options(proxy = os.environ.get('http_proxy'), cookie = headers.get('Cookie'), 
+			ua = headers.get('User-Agent'), referer = headers.get('Referer'))
+	scan_page(url, scanner.getData())
 
 if __name__ == "__main__":
     print "%s #v%s\n by: %s\n" % (NAME, VERSION, AUTHOR)

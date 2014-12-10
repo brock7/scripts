@@ -38,6 +38,8 @@ scanDepth = 2
 
 saveCookie = False
 cookie = ''
+postData = ''
+headers = {}
 searchCount = -1
 googleWhat = ''
 ofile = sys.stdout
@@ -90,9 +92,20 @@ class Scanner:
 		return cookie
 	
 	@staticmethod
+	def getData():
+		return postData
+	
+	@staticmethod
 	def setupCookie(req):
 		if len(cookie) > 0:
 			request.add_header('Cookie', cookie)
+
+	@staticmethod
+	def getHeaders():
+		return headers
+
+	def getOpener(self):
+		return self._opener
 
 	def sendReq(self, request, data = None, cookie = '', timeout = 15):
 		webutils.setupRequest(request)
@@ -192,11 +205,21 @@ class GoogleScanner(Scanner):
 def loadTester(scanner, names):
 	mods = []
 	for name in names:
+		if len(name.strip()) <= 0 or name == '__init__':
+			continue
 		m = importlib.import_module('tester.' + name)
 		if m == None:
 			print 'cannot load tester: ' + name
 			sys.exit(-1)
 		scanner._testers.append(m)
+
+def getAllTester():
+	ls = os.listdir('./tester')
+	result = ''
+	for path in ls:
+		if path[-3:] == '.py':
+			result += path[:-3] + ','
+	return result
 
 #####################################################################
 
@@ -225,7 +248,7 @@ if __name__ == "__main__":
 	reload(sys)
 	sys.setdefaultencoding(locale.getpreferredencoding())
 
-	opts, args = getopt.getopt(sys.argv[1:], "aAd:e:f:hk:m:n:N:o:st:vw:")
+	opts, args = getopt.getopt(sys.argv[1:], "aAd:D:e:f:hH:k:m:n:N:o:st:vw:")
 	#print opts
 	#print args
 
@@ -239,6 +262,8 @@ if __name__ == "__main__":
 			checkAll = False
 		elif op == '-d':
 			scanDepth = int(value)
+		elif op == '-D':
+			postData = value
 		elif op == "-e":
 			results.append(value)	
 		elif op == "-f":
@@ -247,6 +272,9 @@ if __name__ == "__main__":
 		#	googleWhat = value
 		elif op == "-h":
 			usage()
+		elif op == '-H':
+			k, v = value.split(':')
+			headers[k.strip()]= v.strip()
 		elif op == '-k':
 			cookie = value
 		elif op == '-m':
@@ -269,7 +297,7 @@ if __name__ == "__main__":
 			verbose = True
 		elif op == "-w":		
 			scanWait = float(value)
-	
+
 	try:
 		if len(outfile) > 0:
 			ofile = open(outfile, "w")
@@ -280,6 +308,9 @@ if __name__ == "__main__":
 	if len(args) <= 0:
 		usage()
 		sys.exit(0)
+
+	if testerMods == 'all':
+		testerMods = getAllTester()
 
 	if scanType == 0:
 		if testerMods == '':
@@ -306,7 +337,7 @@ if __name__ == "__main__":
 
 	elif scanType == 1:
 		if testerMods == '':
-			testerMods = 'hidden,php_array'
+			testerMods = 'simple'
 		urlRoot = args[0]
 		if not re.search(r'^http://', urlRoot, re.IGNORECASE):
 			urlRoot = 'http://' + urlRoot
@@ -315,14 +346,14 @@ if __name__ == "__main__":
 		scanner.scan()
 	elif scanType == 2:
 		if testerMods == '':
-			testerMods = 'hidden,php_array'
+			testerMods = 'simple'
 		keyword = args[0]
 		scanner = GoogleScanner(keyword)
 		loadTester(scanner, testerMods.split(','))
 		scanner.scan()
 	elif scanType == 3:
 		if testerMods == '':
-			testerMods = 'hidden,php_array'
+			testerMods = 'simple'
 		url = args[0]
 		scanner = SingleScanner(url)
 		loadTester(scanner, testerMods.split(','))
