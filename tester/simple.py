@@ -48,7 +48,7 @@ def scan(url, scanner):
 				scanner.report(url, respText[:512])
 				return True
 	except:
-		raise
+		#raise
 		pass
 	return False
 
