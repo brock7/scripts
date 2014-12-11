@@ -29,6 +29,7 @@ verbose = True
 waitForPerReq = 1.0
 searchPage = 1
 resultCount = 20
+command = ''
 
 hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip', 
 	'ext:conf', 'ext:rar', 'ext:sh', 'ext:gz', 'ext:bz2', 'ext:tar', 'ext:tgz', 
@@ -39,6 +40,12 @@ hacks = ('ext:xls', 'ext:xlsx', 'ext:doc', 'ext:docx', 'ext:txt', 'ext:zip',
 	'intext:*@*.com', 'intext:*@*.net', 'intext:*@*.cn', 'intext:ftp://*:* ',  
 	'intext:powered by', 
 	)
+
+def execCmd(url):
+	if len(command) <= 0:
+		return
+	cmd = command.replace('{}', url)
+	os.system(cmd)
 
 def googleHackLocal(host):
 	#import pdb
@@ -53,6 +60,7 @@ def googleHackLocal(host):
 		try:
 			for url in google(opener, 'site:%s %s' % (host, hack), resultCount):
 				print '     [#] ' + url.decode('utf-8')
+				execCmd(url.decode('utf-8'))
 		except Exception,e:
 			print 'Exception', e
 			raise
@@ -95,6 +103,7 @@ def googleHackGhdb(host):
 		print '******* [google] [GHDB: %d] site:%s %s *******' % (i, host, what)
 		for url in google(opener, 'site:%s %s' % (host, what), resultCount):
 			print '    [#] ' + url.decode('utf-8')
+			execCmd(url.decode('utf-8'))
 		i -= 1
 		if i <= 0:
 			break
@@ -123,13 +132,15 @@ if __name__ == "__main__":
 
 	localOnly = False
 	remoteOnly = False
-	opts, args = getopt.getopt(sys.argv[1:], "hln:p:g:GP:rvw:")
+	opts, args = getopt.getopt(sys.argv[1:], "e:hln:p:g:GP:rvw:")
 	cookieJar = None
 	proxy = ""
 	what = ""
 	for op, value in opts:
 		if op == '-l':
 			localOnly = True
+		elif op == '-e':
+			command = value
 		elif op == '-p':
 			proxy = value
 		elif op == '-g':
@@ -166,6 +177,8 @@ if __name__ == "__main__":
 		# google(args[0], what, page = searchPage)
 		for url in google(opener, what, resultCount):
 			print url.decode('utf-8')
+			execCmd(url.decode('utf-8'))
+
 		sys.exit(0)
 	if not remoteOnly:
 		googleHackLocal(args[0])
