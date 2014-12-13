@@ -14,6 +14,7 @@ import cookielib
 from lxml import etree
 import sys,socket
 import json
+import urlparse
 
 noTitle = False
 def encoding(data):
@@ -119,16 +120,31 @@ def queryWhois(domain):
 def nmap(domain):
 	os.system('nmap -sV %s' % domain)
 
-def baseInfo(domain):
-	req = urllib2.Request('http://' + domain)
+def baseInfo(url):
+	req = urllib2.Request(url)
 	req.add_header('Proxy-Connection', 'Keep-Alive')
 	req.add_header('Accept', '*/*')
 	req.add_header('User-Agent', ' Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0')
+
+	req.get_method = lambda: 'OPTIONS'
 	try:
 		response = urllib2.urlopen(req, timeout = 15)
 		#html = response.read()
 		#for k, v in response.info().items():
 		#	print k,v 
+		if 'Allow' in response.info():
+			print 'Allow: ' +  response.info().getheader('Allow')
+	except:
+		pass
+
+		req.get_method = lambda: 'HEAD'
+	try:
+		response = urllib2.urlopen(req, timeout = 15)
+		#for k, v in response.info().items():
+		#	print k,v 
+		if 'Allow' in response.info():
+			print 'Allow: ' +  response.info().getheader('Allow')
+
 		if response.info().getheader('Server'):
 			print 'Server: ' + response.info().getheader('Server')
 
@@ -160,21 +176,26 @@ if __name__ == '__main__':
 
 	if options == 0:
 		options = 1 | 2 | 4 | 8
+	url = args[0]
+	if url[:7] != 'http://' and url[:8] != 'https://':
+		url = 'http://' + url
+
+	baseInfo(url)
 	
-	baseInfo(args[0])
+	urlP = urlparse.urlparse(url)
 
 	if options & 1:
 		print '\n============================== reverse dns ==============================\n'
-		queryRDNS(args[0])
+		queryRDNS(urlP.hostname)
 	if options & 2:
 		print '\n============================== subdomain ==============================\n'
-		querySubdomain(args[0])
+		querySubdomain(urlP.hostname)
 	if options & 4:
 		print '\n============================== whois ==============================\n'
-		queryWhois(args[0])
+		queryWhois(urlP.hostname)
 	if options & 8:
 		print '\n============================== nmap ==============================\n'
 		sys.stdout.flush()
-		nmap(args[0])
+		nmap(urlP.hostname)
 	sys.exit(0)
 
