@@ -4,11 +4,11 @@ import urllib2
 from lxml import etree
 import re
 import webutils
-import sys
+import sys, os
 
 GOOGLE_HOME = 'http://64.233.161.104'
-GOOGLE_SEARCH_URL = GOOGLE_HOME+ '/search?hl=en_US&start=%d&q=%s'
-REQ_TIMEOUT = 15
+GOOGLE_SEARCH_URL = GOOGLE_HOME + '/search?hl=en_US&start=%d&q=%s'
+REQ_TIMEOUT = 20
 NUM_PER_PAGE = 10
 reqDelay = 0.0
 #maxResult = 10
@@ -55,7 +55,9 @@ def _refreshCookie(opener, what):
 def _urlFilter(url):
 	if url.find('http:') == -1 and url.find('ftp:') == -1 and url.find('https:') == -1:
 		return False
-	if url.find('google.com') != -1:
+	if url.find('.google.') != -1:
+		return False
+	if url.find(GOOGLE_HOME) != -1:
 		return False
 	if url.find('.googleusercontent.com') != -1:
 		return False
@@ -69,7 +71,8 @@ def _urlFilter(url):
 		return False
 	return True
 
-pattern = re.compile(r'About ([0-9,]+) results<nobr>')
+pattern = re.compile(r'About ([0-9,]+) results')
+#pattern = re.compile(r'About ([0-9,]+) results<nobr>')
 #pattern = re.compile(r'找到约 ([0-9,]+) 条结果'.encode('utf-8'))
 pattern2 = re.compile(r'Your search for ".*?" returned no results')
 
@@ -109,6 +112,12 @@ def _makeCookie(name, value):
 
 def _googleSearch(opener, what, resultNum = -1, startNum = 0):
 	
+	if os.environ.has_key('google_home'):
+		global GOOGLE_HOME
+		global GOOGLE_SEARCH_URL
+		GOOGLE_HOME = os.environ['google_home']
+		GOOGLE_SEARCH_URL = GOOGLE_HOME + '/search?hl=en_US&start=%d&q=%s'
+
 	what = urllib2.quote(what)
 	if resultNum == -1:
 		pageCount = -1
