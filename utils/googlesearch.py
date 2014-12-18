@@ -116,7 +116,8 @@ def _googleSearch(opener, what, resultNum = -1, startNum = 0):
 		global GOOGLE_HOME
 		global GOOGLE_SEARCH_URL
 		GOOGLE_HOME = os.environ['google_home']
-		GOOGLE_SEARCH_URL = GOOGLE_HOME + '/search?hl=en_US&start=%d&q=%s'
+
+	GOOGLE_SEARCH_URL = GOOGLE_HOME + '/search?hl=en_US&start=%d&q=%s'
 
 	what = urllib2.quote(what)
 	if resultNum == -1:

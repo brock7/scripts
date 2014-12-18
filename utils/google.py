@@ -20,7 +20,7 @@ elif search_engine == 'google':
 elif search_engine == 'aol':
  	google = aolsearch.google
 elif search_engine == 'bing':
- 	google = gingsearch.google
+ 	google = bingsearch.google
 else:
 	google = gfsoso.google
 
