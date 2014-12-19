@@ -170,18 +170,18 @@ def baseInfo(url):
 		print '* Support Debug Method'
 		#print response.read()
 	except Exception, e:
-		if hasattr(e, 'code'):
-			if not (e.code == 501 or e.code == 405 or e.code == 403):
-				print 'TRACE: ', e
+		pass
+#		if hasattr(e, 'code'):
+#			if not (e.code == 501 or e.code == 405 or e.code == 403):
+#				print 'DEBUG: ', e
 
 	req.get_method = lambda: 'TRACE'
 	try:
 		response = urllib2.urlopen(req, timeout = 15)
-		print '* Support TRACE Header'
+		if response.read().find(r'TRACE / HTTP/') != -1:
+			print '* Support TRACE Method'
 	except Exception, e:
-		if hasattr(e, 'code'):
-			if not (e.code == 501 or e.code == 405 or e.code == 403):
-				print 'TRACE: ', e
+		pass
 
 def querySiteFile(url):
 	files = ( ('robots.txt', 'Allow|Disallow'), ('crossdomain.xml', 'cross-domain-policy'), 
