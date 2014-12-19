@@ -45,7 +45,7 @@ def _refreshCookie(opener, what):
 			global RedirectedUrl
 			RedirectedUrl = response.geturl()
 			RedirectedUrl = RedirectedUrl[0 : RedirectedUrl.find('/', 7) + 1]
-			# print RedirectedUrl
+			# print 'Redirect', RedirectedUrl
 			return False
 
 		html = response.read()
@@ -62,10 +62,12 @@ def _refreshCookie(opener, what):
 
 	m = re.search(r"_GFTOKEN','([0-9a-f]+)'", html)
 	
+	# print m, m.group(1)
 	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_pages', '1'))
 	webutils.cookieJar.set_cookie(_makeCookie('AJSTAT_ok_times', '1'))
 	if m:
 		webutils.cookieJar.set_cookie(_makeCookie('_GFTOKEN', m.group(1)))
+	else:
 		return False
 	global _cookieFetched
 	_cookieFetched = True
@@ -164,6 +166,7 @@ def _gfsosoSearch(opener, what, resultNum = -1, startNum = 0):
 
 	if not _cookieFetched:
 		if not _refreshCookie(opener, what):
+			print 'abcd'
 			#global _gfsosoPageHandler
 			googlesearch.GOOGLE_HOME = RedirectedUrl
 			#print RedirectedUrl
