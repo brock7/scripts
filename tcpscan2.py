@@ -11,11 +11,14 @@ import sys, os
 import socket
 import getopt
 
-def detect_port(host, port):
+def detect_port(host, port, connect_only = False):
 	s = socket.socket()
 	s.settimeout(1)
 	try:
 		s.connect((host, port))
+		if connect_only:
+			print port
+			return
 		s.send('GET / HTTP/1.0\n\n')
 		buf = s.recv(1024)
 		print port, buf[:buf.find('\n')]
@@ -26,7 +29,7 @@ def detect_port(host, port):
 
 	s.close()
 
-ports = (21, 22, 23, 25, 53, 69, 80, 110, 135, 137, 139, 445, 1025, 
+ports = (21, 22, 23, 25, 53, 69, 80, 110, 135, 137, 139, 445, 1025, 1080
 	  1194, 1433, 1521, 3306, 3389, 5900, 8000, 8080)
 for port in ports:
 	detect_port(sys.argv[1], port)
