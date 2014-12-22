@@ -1,0 +1,25 @@
+
+Documentation: How to update Intersect Framework
+
+- How To Update
+- Updates Schedule
+
+
+How To Update:
+
+*coming soon*
+
+
+Updates Schedule:
+
+New features, bug fixes and upgrades are constantly being pushed to
+the Intersect Github repository. I will do my best to make sure that every
+Monday morning, there is a stable release available. The stable release will
+be listed under the 'master' branch and any developmental and beta upgrades
+will be listed under the 'development' branch.
+
+Every Monday morning, you can update to the latest stable release by using
+the command 'git pull master' from your main Intersect directory.
+
+For the beta release use 'git pull development'
+
