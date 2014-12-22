@@ -30,7 +30,7 @@ def detect_port(host, port, connect_only = False):
 	s.close()
 
 ports = (21, 22, 23, 25, 53, 69, 80, 110, 135, 137, 139, 445, 1025, 1080
-	  1194, 1433, 1521, 3306, 3389, 5900, 8000, 8080)
+	  1194, 1433, 1521, 3306, 3389, 4899, 5900, 8000, 8080)
 for port in ports:
 	detect_port(sys.argv[1], port)
 
