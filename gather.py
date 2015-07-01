@@ -58,7 +58,7 @@ def querySubdomain(domain):
 	for node in nodes:
 		print node, getTitle(node)
 
-def queryRDNS(domain):
+def queryRDNS_old(domain):
 	hostInfos = socket.gethostbyname_ex(domain) #r = (hostname, aliaslist, ipaddrlist)
 	for ipaddr in hostInfos[2]:
 		maxpage = 1
@@ -83,6 +83,20 @@ def queryRDNS(domain):
 		except Exception, e:
 			print e
 			#pass
+
+def queryRDNS(domain):
+	hostInfos = socket.gethostbyname_ex(domain) #r = (hostname, aliaslist, ipaddrlist)
+	for ipaddr in hostInfos[2]:
+            try:
+                response = urllib2.urlopen('http://dns.aizhan.com/%s/' % (ipaddr))
+                text = response.read()
+                tree = etree.HTML(text)       
+                nodes = tree.xpath(r"//td[@class='dns-links']/a/@href")  
+                for node in nodes:
+                    print node
+            except Exception, e: 
+                print e
+
 
 def toStr(l):
 	#print type(l)
