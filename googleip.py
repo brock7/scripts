@@ -5,7 +5,7 @@ import urllib2
 import cookielib
 import re
 from lxml import etree
-import ping
+# import ping
 import time
 
 def ping(ip):
