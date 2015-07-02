@@ -87,13 +87,16 @@ def queryRDNS_old(domain):
 def queryRDNS(domain):
 	hostInfos = socket.gethostbyname_ex(domain) #r = (hostname, aliaslist, ipaddrlist)
 	for ipaddr in hostInfos[2]:
+
+            print '[IP Address: ' + ipaddr + ']'
+            # TODO: 加入翻页代码
             try:
                 response = urllib2.urlopen('http://dns.aizhan.com/%s/' % (ipaddr))
                 text = response.read()
                 tree = etree.HTML(text)       
                 nodes = tree.xpath(r"//td[@class='dns-links']/a/@href")  
                 for node in nodes:
-                    print node
+                    print node, getTitle(node)
             except Exception, e: 
                 print e
 
