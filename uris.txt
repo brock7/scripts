@@ -1,3 +1,4 @@
 /uc_server/control/admin/db.php
 /source/plugin/myrepeats/table/table_myrepeats.php
 /install/include/install_lang.php
+/cgi-bin/test-cgi
