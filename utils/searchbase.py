@@ -74,21 +74,22 @@ class SearchBase:
                 if pageNum > pageCount:
                     break
 
-            url = self._genUrl(what, (startPage + pageNum) * numPerPage)
+            url = self._genUrl(what, (startPage + pageNum - 1) * numPerPage)
+            # print url
             
             for result in self._pageHandler(url):
                 resCnt += 1
                 yield result
                 if resultNum != -1 and resCnt >= resultNum:
                     raise StopIteration()
-                if resCnt >= totalRecord:
+                if resCnt >= self._totalRecord:
                     raise StopIteration()
 
             if self._totalRecord == sys.maxint:
                 if resultNum == -1:
-                    totalRecord = sys.maxint - 1
+                    self._totalRecord = sys.maxint - 1
                 else:
-                    totalRecord = resultNum
+                    self._totalRecord = resultNum
 
             if resCnt >= self._totalRecord:
                 raise StopIteration()
