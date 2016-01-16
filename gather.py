@@ -89,16 +89,19 @@ def queryRDNS(domain):
 	for ipaddr in hostInfos[2]:
 
             print '[IP Address: ' + ipaddr + ']'
-            # TODO: 加入翻页代码
-            try:
-                response = urllib2.urlopen('http://dns.aizhan.com/%s/' % (ipaddr))
-                text = response.read()
-                tree = etree.HTML(text)       
-                nodes = tree.xpath(r"//td[@class='dns-links']/a/@href")  
-                for node in nodes:
-                    print node, getTitle(node)
-            except Exception, e: 
-                print e
+            # 翻页
+            for i in range(5): # 最多5页，需要更多到网页上去看
+                try:
+                    response = urllib2.urlopen('http://dns.aizhan.com/%s/%d/' % (ipaddr, i))
+                    text = response.read()
+                    tree = etree.HTML(text)       
+                    nodes = tree.xpath(r"//td[@class='dns-links']/a/@href")
+                    if len(nodes) == 0:
+                        break
+                    for node in nodes:
+                        print node, getTitle(node)
+                except Exception, e: 
+                    print e
 
 
 def toStr(l):

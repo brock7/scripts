@@ -129,7 +129,7 @@ def getPageTitle(opener, url):
 		return ''
 
 	try:
-		if url[:7] != 'http://':
+		if url[:7] != 'http://' and url[:8] != 'https://':
 			url = 'http://' + url
 		req = urllib2.Request(url)
 		setupRequest(req)

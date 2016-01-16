@@ -11,7 +11,7 @@ import time
 import locale
 import webutils
 
-HXGOOGLE_HOME = 'http://www.hxgoogle.com'
+HXGOOGLE_HOME = 'http://g.hxgoogle.com'
 NUM_PER_PAGE = 10
 REQ_TIMEOUT = 20
 totalRecord = sys.maxint
@@ -82,7 +82,7 @@ def _hxSearch(opener, what, resultNum = -1, startNum = 0):
         if pageCount != -1:
             if pageNum > pageCount:
                 break
-        url = HXGOOGLE_HOME + '/search.jsp?q=%s&newwindow=1&safe=off&noj=1&hl=zh-CN&start=%d&sa=N' %  (what, (startPage + pageNum) * 10)
+        url = HXGOOGLE_HOME + '/search.jsp?q=%s&newwindow=1&safe=off&noj=1&hl=zh-CN&start=%d&sa=N' %  (what, (startPage + pageNum - 1) * 10)
 
         for result in _hxPageHandler(opener, url):
             # i += 1

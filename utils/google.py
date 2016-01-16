@@ -4,6 +4,8 @@ import aolsearch
 import googlesearch
 import bingsearch
 import hxgoogle
+import hxgoogle2
+import hxgoogle3
 
 #searchEngine = googlesearch.google
 #searchEngine = aolsearch.google
@@ -24,8 +26,12 @@ elif search_engine == 'bing':
  	google = bingsearch.google
 elif search_engine == 'hxgoogle':
         google = hxgoogle.google
+elif search_engine == 'hxgoogle2':
+        google = hxgoogle2.google
+elif search_engine == 'hxgoogle3':
+        google = hxgoogle3.google
 else:
-	google = hxgoogle.google
+	google = hxgoogle2.google
 
 searchEngine = google
 
