@@ -14,7 +14,7 @@ import hxgoogle3
 if os.environ.has_key('search_engine'):
 	search_engine = os.environ['search_engine']
 else:
-	search_engine = 'hxgoogle'
+	search_engine = 'google'
 
 if search_engine == 'gfsoso':
 	google = gfsoso.google

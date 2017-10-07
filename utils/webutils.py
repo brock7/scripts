@@ -35,11 +35,11 @@ def setupOpener(opener):
 		global cookieJar
 		cookieJar = cookielib.CookieJar() 
 		opener.add_handler(urllib2.HTTPCookieProcessor(cookieJar))
-
+        """
 	if os.environ.has_key('http_proxy'):
 		prx = os.environ['http_proxy']
 		opener.add_handler(urllib2.ProxyHandler({'http': prx}))
-		
+	"""	
 topurlPostfix = (
 	'.com','.la','.io',
 	'.co',

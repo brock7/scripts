@@ -6,7 +6,7 @@ import re
 import webutils
 import sys, os
 
-GOOGLE_HOME = 'http://64.233.161.104'
+GOOGLE_HOME = 'https://www.google.com'
 GOOGLE_SEARCH_URL = GOOGLE_HOME + '/search?hl=en_US&start=%d&q=%s'
 REQ_TIMEOUT = 20
 NUM_PER_PAGE = 10
